@@ -66,6 +66,9 @@ namespace CreateAddon
 		// TimeStamp (8)
 		buffer.WriteType( (unsigned long long) Bootil::Time::UnixTimestamp() );
 
+		// Required content (a list of strings)
+		buffer.WriteType( (char) 0 ); // signifies nothing
+
 		// Addon Name (n) [unused]
 		buffer.WriteString( "Untitled Addon" );
 

@@ -14,6 +14,9 @@ int main( int argc, char *argv[] )
 	//
 	BString strCommand = String::GetLower( CommandLine::GetArg( 0 ) );
 
+	//
+	// Create
+	//
 	if ( strCommand == "create" )
 	{
 		Bootil::BString strFolder = Bootil::CommandLine::GetSwitch( "-folder", "" );
@@ -31,6 +34,24 @@ int main( int argc, char *argv[] )
 		}
 
 		return CreateAddonFile( strFolder, strTarget );
+
+	}
+
+	//
+	// Extract
+	//
+	if ( strCommand == "extract" )
+	{
+		Bootil::BString strFile = Bootil::CommandLine::GetSwitch( "-file", "" );
+		if ( strFile == "" )
+		{
+			Bootil::Output::Msg( "Missing -file (the addon you want to extract)\n" );
+			exit( 1 );
+		}
+
+		Bootil::BString strTarget = Bootil::CommandLine::GetSwitch( "-out", "" );
+
+		return ExtractAddonFile( strFile, strTarget );
 
 	}
 
