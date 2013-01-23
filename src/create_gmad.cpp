@@ -18,6 +18,11 @@ int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile )
 	Bootil::File::GetFilesInFolder( strFolder, files, true );
 
 	//
+	// Sort the list into alphabetical order, no real reason - we're just ODC
+	//
+	Bootil::String::SortList( files, false );
+
+	//
 	// Bail out if there's no files
 	//
 	if ( files.empty() ) { Output::Msg( "No files found, can't continue!\n" ); return 1; }
