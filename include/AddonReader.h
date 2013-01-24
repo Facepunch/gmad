@@ -46,10 +46,10 @@ namespace Addon
 				}
 
 				//
-				// Version
+				// Format Version
 				//
-				m_version = m_buffer.ReadType<char>();
-				if ( m_version > Addon::Version )
+				m_fmtversion = m_buffer.ReadType<char>();
+				if ( m_fmtversion > Addon::Version )
 					return false;
 
 				m_buffer.ReadType<unsigned long long>(); // steamid
@@ -58,7 +58,7 @@ namespace Addon
 				//
 				// Required content (not used at the moment, just read out)
 				//
-				if ( m_version > 1 )
+				if ( m_fmtversion > 1 )
 				{
 					Bootil::BString strContent = m_buffer.ReadString();
 
@@ -133,11 +133,12 @@ namespace Addon
 			}
 
 			const Addon::FileEntry::List& GetList(){ return m_index; }
+			unsigned int GetFormatVersion(){ return m_fmtversion; }
 
 		protected:
 
 			Bootil::AutoBuffer		m_buffer;
-			char					m_version;
+			char					m_fmtversion;
 			Bootil::BString			m_name;
 			Bootil::BString			m_author;
 			Bootil::BString			m_desc;
