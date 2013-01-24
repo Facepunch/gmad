@@ -97,6 +97,29 @@ class GModAddon
 			return true;
 		}
 
+		bool GetFile( unsigned int iFileID, Addon::FileEntry& outfile )
+		{
+			BOOTIL_FOREACH( file, m_index, Addon::FileEntry::List )
+			{
+				if ( file->iFileNumber == iFileID )
+				{
+					outfile = *file;
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		bool ReadFile( unsigned int iFileID, Bootil::Buffer& buffer )
+		{
+			Addon::FileEntry file;
+			if ( !GetFile( iFileID, file ) ) return false;
+
+			buffer.Write( m_buffer.GetBase( m_fileblock + file.iOffset ), file.iSize );
+			return true;
+		}
+
 		const Addon::FileEntry::List& GetList(){ return m_index; }
 
 	protected:
@@ -123,6 +146,13 @@ int ExtractAddonFile( Bootil::BString strFile, Bootil::BString strOutPath )
 		strOutPath = String::File::GetStripExtension( strFile );
 	}
 
+	//
+	// Remove slash, add slash (enforces a slash)
+	//
+	String::File::FixSlashes( strOutPath );
+	String::Util::TrimRight( strOutPath, "/" );
+	strOutPath = strOutPath + "/";
+
 	GModAddon addon;
 
 	if ( !addon.ReadFromFile( strFile ) )
@@ -141,10 +171,26 @@ int ExtractAddonFile( Bootil::BString strFile, Bootil::BString strOutPath )
 
 	BOOTIL_FOREACH_CONST( entry, addon.GetList(), Addon::FileEntry::List )
 	{
-		Output::Msg( "\t%s (%s)\n", entry->strName.c_str(), String::Format::Memory( entry->iSize ).c_str() );
+		Output::Msg( "\t%s [%s]\n", entry->strName.c_str(), String::Format::Memory( entry->iSize ).c_str() );
 
-		// TODO: extract
+		// Make sure folders exists
+		File::CreateFolder( strOutPath + String::File::GetStripFilename( entry->strName ), true );
+
+		// Load the file into the buffer
+		AutoBuffer filecontents;
+
+		if ( addon.ReadFile( entry->iFileNumber, filecontents ) )
+		{
+			// Write the file to disk
+			File::Write( strOutPath + entry->strName, filecontents );
+		}
+		else
+		{
+			Output::Warning( "\t\tCouldn't extract!" );
+		}
 	}
+
+	Output::Msg( "Done!\n" );
 	
 	return 0;
 }
