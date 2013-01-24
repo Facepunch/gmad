@@ -5,7 +5,7 @@ Garry's Mod Addon Creator and Extractor
 
 Usage
 =====
------
+
 `gmad <command> <options>`
 
 To create a new .gma file
