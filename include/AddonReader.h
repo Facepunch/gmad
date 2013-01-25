@@ -17,7 +17,7 @@ namespace Addon
 
 			Reader()
 			{
-
+				Clear();
 			}
 
 			//
@@ -132,8 +132,23 @@ namespace Addon
 				return true;
 			}
 
+			//
+			// Clears the addon's variables, frees all memory
+			//
+			void Clear()
+			{
+				m_buffer.Clear();
+				m_fmtversion = 0;
+				m_name.clear();
+				m_author.clear();
+				m_desc.clear();
+				m_index.clear();
+				m_fileblock = 0;
+			}
+
 			const Addon::FileEntry::List& GetList(){ return m_index; }
 			unsigned int GetFormatVersion(){ return m_fmtversion; }
+			const Bootil::Buffer& GetBuffer(){ return m_buffer; }
 
 		protected:
 
