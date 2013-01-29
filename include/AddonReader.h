@@ -149,6 +149,9 @@ namespace Addon
 			const Addon::FileEntry::List& GetList(){ return m_index; }
 			unsigned int GetFormatVersion(){ return m_fmtversion; }
 			const Bootil::Buffer& GetBuffer(){ return m_buffer; }
+			Bootil::BString Title(){ return m_name; }
+			Bootil::BString Description(){ return m_desc; }
+			Bootil::BString Author(){ return m_author; }
 
 		protected:
 
