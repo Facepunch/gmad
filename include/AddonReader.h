@@ -100,6 +100,23 @@ namespace Addon
 
 				m_fileblock = m_buffer.GetPos();
 
+				//
+				// Try to parse the description
+				//
+				Bootil::Data::Tree json;
+				if ( Bootil::Data::Json::Import( json, m_desc ) )
+				{
+					m_desc = json.ChildValue( "description" );
+					m_type = json.ChildValue( "type" );
+
+					Bootil::Data::Tree& tags = json.GetChild( "tags" );
+					BOOTIL_FOREACH( tag, tags.Children(), Bootil::Data::Tree::List )
+					{
+						m_tags.push_back( tag->Value() );
+					}
+					
+				}
+
 				return true;
 			}
 
@@ -143,7 +160,9 @@ namespace Addon
 				m_author.clear();
 				m_desc.clear();
 				m_index.clear();
+				m_type.clear();
 				m_fileblock = 0;
+				m_tags.clear();
 			}
 
 			const Addon::FileEntry::List& GetList(){ return m_index; }
@@ -152,6 +171,8 @@ namespace Addon
 			Bootil::BString Title(){ return m_name; }
 			Bootil::BString Description(){ return m_desc; }
 			Bootil::BString Author(){ return m_author; }
+			const Bootil::BString& Type(){ return m_type; }
+			Bootil::String::List& Tags(){ return m_tags; }
 
 		protected:
 
@@ -160,8 +181,12 @@ namespace Addon
 			Bootil::BString			m_name;
 			Bootil::BString			m_author;
 			Bootil::BString			m_desc;
+			Bootil::BString			m_type;
 			Addon::FileEntry::List	m_index;
 			unsigned long			m_fileblock;
+
+			Bootil::String::List	m_tags;
+
 	};
 
 }
