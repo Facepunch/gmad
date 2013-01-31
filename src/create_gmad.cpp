@@ -55,7 +55,7 @@ namespace CreateAddon
 	//
 	// Create an uncompressed GMAD file from a list of files
 	//
-	bool Create( Bootil::Buffer& buffer, Bootil::BString strFolder, Bootil::String::List& files, Bootil::BString strTitle )
+	bool Create( Bootil::Buffer& buffer, Bootil::BString strFolder, Bootil::String::List& files, Bootil::BString strTitle, Bootil::BString strDescription )
 	{
 		// Header (5)
 		buffer.Write( Addon::Ident, 4 );				// Ident (4)
@@ -70,8 +70,11 @@ namespace CreateAddon
 		// Required content (a list of strings)
 		buffer.WriteType( (char) 0 ); // signifies nothing
 
-		// Addon Name (n) [unused]
+		// Addon Name (n)
 		buffer.WriteString( strTitle );
+
+		// Addon Description (n)
+		buffer.WriteString( strDescription );
 
 		// Addon Author (n) [unused]
 		buffer.WriteString( "Author Name" );
@@ -89,8 +92,8 @@ namespace CreateAddon
 			iFileNum++;
 			buffer.WriteType( (unsigned int) iFileNum );					// File number (4)
 			buffer.WriteString( String::GetLower( *f ) );					// File name (all lower case!) (n)
-			buffer.WriteType( (unsigned int) iCRC );						// File CRC (4)
 			buffer.WriteType( (long long) iSize );							// File size (8)
+			buffer.WriteType( (unsigned long) iCRC );						// File CRC (4)
 
 			Output::Msg( "File index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
 		}
@@ -182,7 +185,7 @@ int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile )
 	// Create an addon file in a buffer
 	//
 	Bootil::AutoBuffer buffer;
-	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle() ) )
+	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle(), addoninfo.GetDescription() ) )
 	{
 		Output::Warning( "Failed to create the addon\n" );
 		return 1;

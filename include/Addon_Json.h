@@ -41,6 +41,12 @@ class CAddonJson
 			}
 
 			//
+			// Get the description
+			//
+			m_Description	= tree.ChildValue( "description", "Description" );
+			
+
+			//
 			// Parse the ignores
 			//
 			Bootil::Data::Tree ignores = tree.GetChild( "ignore" );
@@ -84,10 +90,13 @@ class CAddonJson
 
 		const Bootil::BString& GetError(){ return m_strError; }
 		const Bootil::BString& GetTitle(){ return m_Title; }
+		const Bootil::BString& GetDescription(){ return m_Description; }
+		
 
 		Bootil::BString			m_strError;
 
 		Bootil::BString			m_Title;
+		Bootil::BString			m_Description;
 		Bootil::String::List	m_Ignores;
 };
 
