@@ -44,6 +44,35 @@ class CAddonJson
 			// Get the description
 			//
 			m_Description	= tree.ChildValue( "description", "Description" );
+
+			//
+			// Load the addon type
+			//
+			m_AddonType		= tree.ChildValue( "type", "" );
+			{
+				Bootil::String::Lower( m_AddonType );
+
+				if ( m_AddonType.empty() )
+				{
+					m_strError = "type is empty!";
+					return;
+				}
+
+				//
+				// Verify that the addon type is valid by checking it against the list of valids
+				//
+				for ( int i=0;;i++ )
+				{
+					if ( Addon::Tags::Type[i] == NULL )
+					{
+						m_strError = "type isn't a supported type!";
+						return;
+					}
+
+					if ( m_AddonType == Addon::Tags::Type[i] )
+						break;
+				}
+			}
 			
 
 			//
@@ -91,12 +120,14 @@ class CAddonJson
 		const Bootil::BString& GetError(){ return m_strError; }
 		const Bootil::BString& GetTitle(){ return m_Title; }
 		const Bootil::BString& GetDescription(){ return m_Description; }
+		const Bootil::BString& GetType(){ return m_AddonType; }
 		
 
 		Bootil::BString			m_strError;
 
 		Bootil::BString			m_Title;
 		Bootil::BString			m_Description;
+		Bootil::BString			m_AddonType;
 		Bootil::String::List	m_Ignores;
 };
 
