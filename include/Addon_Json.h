@@ -117,6 +117,24 @@ class CAddonJson
 			}
 		}
 
+		//
+		// Build a JSON description to store in the GMA
+		//
+		Bootil::BString BuildDescription()
+		{
+			Bootil::Data::Tree tree;
+
+			tree.SetChild( "description", GetDescription() );
+			tree.SetChild( "type", GetType() );
+
+			Bootil::BString strOutput;
+			Bootil::Data::Json::Export( tree, strOutput, true );
+
+			Bootil::Output::Msg( "\n%s\n", strOutput.c_str() );
+
+			return strOutput;
+		}
+
 		const Bootil::BString& GetError(){ return m_strError; }
 		const Bootil::BString& GetTitle(){ return m_Title; }
 		const Bootil::BString& GetDescription(){ return m_Description; }

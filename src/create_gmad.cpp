@@ -185,7 +185,7 @@ int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile )
 	// Create an addon file in a buffer
 	//
 	Bootil::AutoBuffer buffer;
-	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle(), addoninfo.GetDescription() ) )
+	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle(), addoninfo.BuildDescription() ) )
 	{
 		Output::Warning( "Failed to create the addon\n" );
 		return 1;
