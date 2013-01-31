@@ -5,9 +5,12 @@ using namespace Bootil;
 
 int main( int argc, char *argv[] )
 {
+	Debug::SuppressPopups( true );
 	CommandLine::Set( argc, argv );
 
-	Output::Msg( "Garry's Addon Creator 1.0\n" );
+	Console::FGColorPush( Console::Green );
+		Output::Msg( "Garry's Addon Creator 1.0\n" );
+	Console::FGColorPop();
 
 	//
 	// Get the command from the command line - (it should be argument 0)

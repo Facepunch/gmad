@@ -2,6 +2,7 @@
 #include "gmadd.h"
 #include "AddonWhiteList.h"
 #include "AddonFormat.h"
+#include "Addon_Json.h"
 
 using namespace Bootil;
 
@@ -54,7 +55,7 @@ namespace CreateAddon
 	//
 	// Create an uncompressed GMAD file from a list of files
 	//
-	bool Create( Bootil::Buffer& buffer, Bootil::BString strFolder, Bootil::String::List& files )
+	bool Create( Bootil::Buffer& buffer, Bootil::BString strFolder, Bootil::String::List& files, Bootil::BString strTitle )
 	{
 		// Header (5)
 		buffer.Write( Addon::Ident, 4 );				// Ident (4)
@@ -70,7 +71,7 @@ namespace CreateAddon
 		buffer.WriteType( (char) 0 ); // signifies nothing
 
 		// Addon Name (n) [unused]
-		buffer.WriteString( "Untitled Addon" );
+		buffer.WriteString( strTitle );
 
 		// Addon Author (n) [unused]
 		buffer.WriteString( "Author Name" );
@@ -122,7 +123,6 @@ namespace CreateAddon
 	}
 }
 
-
 int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile )
 {
 	bool bErrors = false;
@@ -134,13 +134,35 @@ int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile )
 	String::Util::TrimRight( strFolder, "/" );
 	strFolder = strFolder + "/";
 
+	//
+	// Make sure OutFile ends in .gma
+	//
+	String::File::StripExtension( strOutfile );
+	strOutfile += ".gma";
+
 	Output::Msg( "Looking in folder \"%s\"\n", strFolder.c_str() );
+
+	//
+	// Load the Addon Info file
+	//
+	CAddonJson addoninfo( strFolder + "addon.json" );
+
+	if ( !addoninfo.GetError().empty() )
+	{
+		Output::Warning( "%s error: %s\n", (strFolder + "addon.json").c_str(), addoninfo.GetError().c_str() );
+		return 1;
+	}
 
 	//
 	// Get a list of files in the specified folder
 	//
 	Bootil::String::List files;
 	Bootil::File::GetFilesInFolder( strFolder, files, true );
+
+	//
+	// Let the addon json remove the ignored files
+	//
+	addoninfo.RemoveIgnoredFiles( files );
 
 	//
 	// Sort the list into alphabetical order, no real reason - we're just ODC
@@ -160,7 +182,7 @@ int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile )
 	// Create an addon file in a buffer
 	//
 	Bootil::AutoBuffer buffer;
-	if ( !CreateAddon::Create( buffer, strFolder, files ) )
+	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle() ) )
 	{
 		Output::Warning( "Failed to create the addon\n" );
 		return 1;
