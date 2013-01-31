@@ -1,7 +1,11 @@
 {
 	"title"		:	"My Test Addon",
+	"type"		:	"gamemode",
+	"tags"		:	[ "fun", "cartoon" ],
 	"ignore"	:
 	[
-		"*.lua"
+		"*.psd",
+		"*.vcproj",
+		"*.svn*"
 	]
 }
