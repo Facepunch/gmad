@@ -61,19 +61,42 @@ class CAddonJson
 				//
 				// Verify that the addon type is valid by checking it against the list of valids
 				//
-				for ( int i=0;;i++ )
+				if ( !Addon::Tags::TypeExists( m_AddonType ) )
 				{
-					if ( Addon::Tags::Type[i] == NULL )
+					m_strError = "type isn't a supported type!";
+					return;
+				}
+			}
+
+			//
+			// Parse the tags
+			//
+			{
+				Bootil::Data::Tree tags = tree.GetChild( "tags" );
+
+				//
+				// Collate and check the tags
+				//
+				BOOTIL_FOREACH( child, tags.Children(), Bootil::Data::Tree::List )
+				{
+					if ( !Addon::Tags::TagExists( child->Value() ) )
 					{
 						m_strError = "type isn't a supported type!";
 						return;
 					}
 
-					if ( m_AddonType == Addon::Tags::Type[i] )
-						break;
+					m_Tags.push_back( child->Value() );
+				}
+
+				//
+				// Max 2 tags
+				//
+				if ( m_Tags.size() > 2 )
+				{
+					m_strError = "too many tags - specify 2 only!";
+					return;
 				}
 			}
-			
 
 			//
 			// Parse the ignores
@@ -127,10 +150,16 @@ class CAddonJson
 			tree.SetChild( "description", GetDescription() );
 			tree.SetChild( "type", GetType() );
 
+			Bootil::Data::Tree& tags = tree.GetChild( "tags" );
+			BOOTIL_FOREACH( tag, m_Tags, Bootil::String::List )
+			{
+				tags.AddChild().Value( *tag );
+			}
+
 			Bootil::BString strOutput;
 			Bootil::Data::Json::Export( tree, strOutput, true );
 
-			Bootil::Output::Msg( "\n%s\n", strOutput.c_str() );
+			//Bootil::Output::Msg( "\n\n%s\n\n", strOutput.c_str() );
 
 			return strOutput;
 		}
@@ -147,6 +176,7 @@ class CAddonJson
 		Bootil::BString			m_Description;
 		Bootil::BString			m_AddonType;
 		Bootil::String::List	m_Ignores;
+		Bootil::String::List	m_Tags;
 };
 
 

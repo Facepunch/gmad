@@ -50,6 +50,18 @@ namespace Addon
 			NULL
 		};
 
+		inline bool TypeExists( const Bootil::BString& strName )
+		{
+			for ( int i=0;;i++ )
+			{
+				if ( strName == Addon::Tags::Type[i] )
+					return true;
+			}
+
+			return false;
+		}
+
+
 		//
 		// Up to two of these
 		//
@@ -66,6 +78,17 @@ namespace Addon
 			"build",
 			NULL
 		};
+
+		inline bool TagExists( const Bootil::BString& strName )
+		{
+			for ( int i=0;;i++ )
+			{
+				if ( strName == Addon::Tags::Misc[i] )
+					return true;
+			}
+
+			return false;
+		}
 	};
 
 	//
