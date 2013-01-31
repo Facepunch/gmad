@@ -30,7 +30,46 @@ namespace Addon
 	};
 
 	//
-	// This is the position in the file containing a 64 bit unsigtned int that represents the file's age
+	// A list of tags that are available to set
+	//
+	namespace Tags
+	{
+		//
+		//  Only one of these
+		//
+		static const char* Type[] =
+		{
+			"gamemode",
+			"map",
+			"weapon",
+			"vehicle",
+			"npc",
+			"tool",
+			"effects",
+			"model",
+			NULL
+		};
+
+		//
+		// Up to two of these
+		//
+		static const char* Misc[] =
+		{
+			"fun",
+			"roleplay",
+			"scenic",
+			"movie",
+			"realism",
+			"cartoon",
+			"water",
+			"comic",
+			"build",
+			NULL
+		};
+	};
+
+	//
+	// This is the position in the file containing a 64 bit unsigned int that represents the file's age
 	// It's basically the time it was uploaded to Steam - and is set on download/extraction from steam.
 	//
 	static unsigned int			TimestampOffset			= sizeof(Addon::Header) + sizeof( unsigned long long );
