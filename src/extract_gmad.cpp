@@ -25,7 +25,6 @@ int ExtractAddonFile( Bootil::BString strFile, Bootil::BString strOutPath )
 	String::File::FixSlashes( strOutPath );
 	String::Util::TrimRight( strOutPath, "/" );
 	strOutPath = strOutPath + "/";
-
 	Addon::Reader addon;
 
 	if ( !addon.ReadFromFile( strFile ) )
@@ -41,14 +40,11 @@ int ExtractAddonFile( Bootil::BString strFile, Bootil::BString strOutPath )
 	}
 
 	Output::Msg( "Extracting Files:\n" );
-
 	BOOTIL_FOREACH_CONST( entry, addon.GetList(), Addon::FileEntry::List )
 	{
 		Output::Msg( "\t%s [%s]\n", entry->strName.c_str(), String::Format::Memory( entry->iSize ).c_str() );
-
 		// Make sure folders exists
 		File::CreateFolder( strOutPath + String::File::GetStripFilename( entry->strName ), true );
-
 		// Load the file into the buffer
 		AutoBuffer filecontents;
 
@@ -62,8 +58,6 @@ int ExtractAddonFile( Bootil::BString strFile, Bootil::BString strOutPath )
 			Output::Warning( "\t\tCouldn't extract!" );
 		}
 	}
-
 	Output::Msg( "Done!\n" );
-	
 	return 0;
 }

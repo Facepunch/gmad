@@ -6,10 +6,10 @@
 #include "AddonFormat.h"
 
 //
-// 
 //
 //
-namespace Addon 
+//
+namespace Addon
 {
 	class Reader
 	{
@@ -38,9 +38,9 @@ namespace Addon
 
 				// Ident
 				if ( m_buffer.ReadType<char>() != 'G' ||
-					m_buffer.ReadType<char>() != 'M' ||
-					m_buffer.ReadType<char>() != 'A' ||
-					m_buffer.ReadType<char>() != 'D' )
+						m_buffer.ReadType<char>() != 'M' ||
+						m_buffer.ReadType<char>() != 'A' ||
+						m_buffer.ReadType<char>() != 'D' )
 				{
 					return false;
 				}
@@ -49,6 +49,7 @@ namespace Addon
 				// Format Version
 				//
 				m_fmtversion = m_buffer.ReadType<char>();
+
 				if ( m_fmtversion > Addon::Version )
 					return false;
 
@@ -71,50 +72,44 @@ namespace Addon
 				m_name		= m_buffer.ReadString();
 				m_desc		= m_buffer.ReadString();
 				m_author	= m_buffer.ReadString();
-
 				//
 				// Addon version - unused
 				//
 				m_buffer.ReadType<int>();
-
 				//
 				// File index
 				//
 				int iFileNumber = 1;
 				int iOffset = 0;
+
 				while ( m_buffer.ReadType<unsigned int>() != 0 )
 				{
 					Addon::FileEntry entry;
-
 					entry.strName		= m_buffer.ReadString();
 					entry.iSize			= m_buffer.ReadType<long long>();
 					entry.iCRC			= m_buffer.ReadType<unsigned long>();
 					entry.iOffset		= iOffset;
 					entry.iFileNumber	= iFileNumber;
-
 					m_index.push_back( entry );
-
 					iOffset += entry.iSize;
 					iFileNumber++;
 				}
 
 				m_fileblock = m_buffer.GetPos();
-
 				//
 				// Try to parse the description
 				//
 				Bootil::Data::Tree json;
+
 				if ( Bootil::Data::Json::Import( json, m_desc ) )
 				{
 					m_desc = json.ChildValue( "description" );
 					m_type = json.ChildValue( "type" );
-
 					Bootil::Data::Tree& tags = json.GetChild( "tags" );
 					BOOTIL_FOREACH( tag, tags.Children(), Bootil::Data::Tree::List )
 					{
 						m_tags.push_back( tag->Value() );
 					}
-					
 				}
 
 				return true;
@@ -133,7 +128,6 @@ namespace Addon
 						return true;
 					}
 				}
-
 				return false;
 			}
 
@@ -143,6 +137,7 @@ namespace Addon
 			bool ReadFile( unsigned int iFileID, Bootil::Buffer& buffer )
 			{
 				Addon::FileEntry file;
+
 				if ( !GetFile( iFileID, file ) ) return false;
 
 				buffer.Write( m_buffer.GetBase( m_fileblock + file.iOffset ), file.iSize );
@@ -165,14 +160,14 @@ namespace Addon
 				m_tags.clear();
 			}
 
-			const Addon::FileEntry::List& GetList(){ return m_index; }
-			unsigned int GetFormatVersion(){ return m_fmtversion; }
-			const Bootil::Buffer& GetBuffer(){ return m_buffer; }
-			Bootil::BString Title(){ return m_name; }
-			Bootil::BString Description(){ return m_desc; }
-			Bootil::BString Author(){ return m_author; }
-			const Bootil::BString& Type(){ return m_type; }
-			Bootil::String::List& Tags(){ return m_tags; }
+			const Addon::FileEntry::List& GetList() { return m_index; }
+			unsigned int GetFormatVersion() { return m_fmtversion; }
+			const Bootil::Buffer& GetBuffer() { return m_buffer; }
+			Bootil::BString Title() { return m_name; }
+			Bootil::BString Description() { return m_desc; }
+			Bootil::BString Author() { return m_author; }
+			const Bootil::BString& Type() { return m_type; }
+			Bootil::String::List& Tags() { return m_tags; }
 
 		protected:
 

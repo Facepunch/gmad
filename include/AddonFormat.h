@@ -4,15 +4,15 @@
 #include "Bootil/Bootil.h"
 
 
-namespace Addon 
+namespace Addon
 {
 	static const char*	Ident							= "GMAD";
 	static const char	Version							= 3;
 	static const unsigned int AppID						= 4000;
 	static const unsigned int CompressionSignature		= 0xBEEFCACE;
-	
 
-	struct Header 
+
+	struct Header
 	{
 		char			Ident[4];
 		char			Version;
@@ -52,7 +52,7 @@ namespace Addon
 
 		inline bool TypeExists( const Bootil::BString& strName )
 		{
-			for ( int i=0;;i++ )
+			for ( int i = 0;; i++ )
 			{
 				if ( strName == Addon::Tags::Type[i] )
 					return true;
@@ -81,7 +81,7 @@ namespace Addon
 
 		inline bool TagExists( const Bootil::BString& strName )
 		{
-			for ( int i=0;;i++ )
+			for ( int i = 0;; i++ )
 			{
 				if ( strName == Addon::Tags::Misc[i] )
 					return true;
@@ -95,6 +95,6 @@ namespace Addon
 	// This is the position in the file containing a 64 bit unsigned int that represents the file's age
 	// It's basically the time it was uploaded to Steam - and is set on download/extraction from steam.
 	//
-	static unsigned int			TimestampOffset			= sizeof(Addon::Header) + sizeof( unsigned long long );
+	static unsigned int			TimestampOffset			= sizeof( Addon::Header ) + sizeof( unsigned long long );
 }
 #endif

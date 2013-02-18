@@ -5,14 +5,14 @@
 #include "Bootil/Bootil.h"
 
 //
-// 
 //
 //
-namespace Addon 
+//
+namespace Addon
 {
-	namespace WhiteList 
+	namespace WhiteList
 	{
-		static const char * Wildcard[] =
+		static const char* Wildcard[] =
 		{
 			"maps/*.bsp",
 			"maps/*.png",
@@ -42,15 +42,17 @@ namespace Addon
 		};
 
 		//
-		// Call on a filename including relative path to determine 
+		// Call on a filename including relative path to determine
 		// whether file is allowed to be in the addon.
 		//
 		inline bool Check( const Bootil::BString& strname )
 		{
 			bool bValid = false;
-			for ( int i=0;; i++ )
+
+			for ( int i = 0;; i++ )
 			{
 				if ( bValid || WhiteList::Wildcard[i] == NULL ) break;
+
 				bValid = Bootil::String::Test::Wildcard( Wildcard[i], strname );
 			}
 

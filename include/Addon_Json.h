@@ -34,6 +34,7 @@ class CAddonJson
 			// Check the title
 			//
 			m_Title		= tree.ChildValue( "title" );
+
 			if ( m_Title.empty() )
 			{
 				m_strError = "title is empty!";
@@ -44,7 +45,6 @@ class CAddonJson
 			// Get the description
 			//
 			m_Description	= tree.ChildValue( "description", "Description" );
-
 			//
 			// Load the addon type
 			//
@@ -67,13 +67,11 @@ class CAddonJson
 					return;
 				}
 			}
-
 			//
 			// Parse the tags
 			//
 			{
 				Bootil::Data::Tree tags = tree.GetChild( "tags" );
-
 				//
 				// Collate and check the tags
 				//
@@ -97,7 +95,6 @@ class CAddonJson
 					return;
 				}
 			}
-
 			//
 			// Parse the ignores
 			//
@@ -106,14 +103,12 @@ class CAddonJson
 			{
 				m_Ignores.push_back( child->Value() );
 			}
-
 		}
 
 		void RemoveIgnoredFiles( Bootil::String::List& files )
 		{
 			Bootil::String::List old_files = files;
 			files.clear();
-
 			BOOTIL_FOREACH( f, old_files, Bootil::String::List )
 			{
 				bool bSkipFile = false;
@@ -146,29 +141,24 @@ class CAddonJson
 		Bootil::BString BuildDescription()
 		{
 			Bootil::Data::Tree tree;
-
 			tree.SetChild( "description", GetDescription() );
 			tree.SetChild( "type", GetType() );
-
 			Bootil::Data::Tree& tags = tree.GetChild( "tags" );
 			BOOTIL_FOREACH( tag, m_Tags, Bootil::String::List )
 			{
 				tags.AddChild().Value( *tag );
 			}
-
 			Bootil::BString strOutput;
 			Bootil::Data::Json::Export( tree, strOutput, true );
-
 			//Bootil::Output::Msg( "\n\n%s\n\n", strOutput.c_str() );
-
 			return strOutput;
 		}
 
-		const Bootil::BString& GetError(){ return m_strError; }
-		const Bootil::BString& GetTitle(){ return m_Title; }
-		const Bootil::BString& GetDescription(){ return m_Description; }
-		const Bootil::BString& GetType(){ return m_AddonType; }
-		
+		const Bootil::BString& GetError() { return m_strError; }
+		const Bootil::BString& GetTitle() { return m_Title; }
+		const Bootil::BString& GetDescription() { return m_Description; }
+		const Bootil::BString& GetType() { return m_AddonType; }
+
 
 		Bootil::BString			m_strError;
 
