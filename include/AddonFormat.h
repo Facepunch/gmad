@@ -46,13 +46,14 @@ namespace Addon
 			"npc",
 			"tool",
 			"effects",
-			"model",
-			NULL
+			"model"
 		};
+
+		static const short TypesCount = sizeof(Type) / sizeof(void*);
 
 		inline bool TypeExists( const Bootil::BString& strName )
 		{
-			for ( int i = 0;; i++ )
+			for ( int i = 0; i < TypesCount; i++ )
 			{
 				if ( strName == Addon::Tags::Type[i] )
 					return true;
@@ -75,13 +76,14 @@ namespace Addon
 			"cartoon",
 			"water",
 			"comic",
-			"build",
-			NULL
+			"build"
 		};
+
+		static const short MiscCount = sizeof(Misc) / sizeof(void*);
 
 		inline bool TagExists( const Bootil::BString& strName )
 		{
-			for ( int i = 0;; i++ )
+			for ( int i = 0; i < MiscCount; i++ )
 			{
 				if ( strName == Addon::Tags::Misc[i] )
 					return true;

@@ -36,7 +36,9 @@ int main( int argc, char* argv[] )
 			exit( 1 );
 		}
 
-		return CreateAddonFile( strFolder, strTarget );
+		bool WarnOnInvalidFiles = Bootil::CommandLine::GetFull().find("-warninvalid") != -1;
+
+		return CreateAddonFile( strFolder, strTarget, WarnOnInvalidFiles );
 	}
 
 	//

@@ -72,27 +72,31 @@ class CAddonJson
 			//
 			{
 				Bootil::Data::Tree tags = tree.GetChild( "tags" );
+
+				//
+				// Max 2 tags
+				//
+				if ( tags.Children().size() > 2 )
+				{
+					m_strError = "too many tags - specify 2 only!";
+					return;
+				}
+
 				//
 				// Collate and check the tags
 				//
 				BOOTIL_FOREACH( child, tags.Children(), Bootil::Data::Tree::List )
 				{
-					if ( !Addon::Tags::TagExists( child->Value() ) )
-					{
-						m_strError = "type isn't a supported type!";
-						return;
-					}
+					if (child->Value() == "") continue;
 
 					m_Tags.push_back( child->Value() );
-				}
+					Bootil::String::Lower( m_Tags.back() );
 
-				//
-				// Max 2 tags
-				//
-				if ( m_Tags.size() > 2 )
-				{
-					m_strError = "too many tags - specify 2 only!";
-					return;
+					if ( !Addon::Tags::TagExists( m_Tags.back() ) )
+					{
+						m_strError = "tag isn't a supported word!";
+						return;
+					}					
 				}
 			}
 			//

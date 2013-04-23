@@ -8,7 +8,7 @@ using namespace Bootil;
 
 namespace CreateAddon
 {
-	bool VerifyFiles( Bootil::String::List& files )
+	bool VerifyFiles( Bootil::String::List& files, bool warnInvalid )
 	{
 		bool bOk = true;
 
@@ -21,10 +21,12 @@ namespace CreateAddon
 			bOk = false;
 		}
 
+		Bootil::String::List old_files = files;
+		files.clear();
 		//
 		// Print each found file, check they're ok
 		//
-		BOOTIL_FOREACH( file, files, Bootil::String::List )
+		BOOTIL_FOREACH( file, old_files, Bootil::String::List )
 		{
 			Output::Msg( "\t%s\n", file->c_str() );
 
@@ -32,11 +34,14 @@ namespace CreateAddon
 			// Check the file against the whitelist
 			// Lowercase the name (addon filesystem is case insensitive)
 			//
-			if ( !Addon::WhiteList::Check( String::GetLower( *file ) ) )
+			if ( Addon::WhiteList::Check( String::GetLower( *file ) ) )
+				files.push_back( *file );
+			else
 			{
 				Output::Warning( "\t\t[Not allowed by whitelist]\n" );
-				bOk = false;
-			}
+				if(!warnInvalid)
+					bOk = false;
+			}	
 
 			//
 			// Warn that we're gonna lowercase the filename
@@ -109,7 +114,7 @@ namespace CreateAddon
 	}
 }
 
-int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile )
+int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile, bool warnInvalid  )
 {
 	bool bErrors = false;
 	//
@@ -152,7 +157,7 @@ int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile )
 	//
 	// Verify
 	//
-	if ( !CreateAddon::VerifyFiles( files ) )
+	if ( !CreateAddon::VerifyFiles( files, warnInvalid ) )
 	{
 		Output::Warning( "File list verification failed\n" );
 		return 1;
