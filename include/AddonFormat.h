@@ -46,7 +46,8 @@ namespace Addon
 			"npc",
 			"tool",
 			"effects",
-			"model"
+			"model",
+			"servercontent"
 		};
 
 		static const short TypesCount = sizeof(Type) / sizeof(void*);
