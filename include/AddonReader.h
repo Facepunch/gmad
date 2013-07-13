@@ -101,7 +101,7 @@ namespace Addon
 				//
 				Bootil::Data::Tree json;
 
-				if ( Bootil::Data::Json::Import( json, m_desc ) )
+				if ( Bootil::Data::Json::Import( json, m_desc.c_str() ) )
 				{
 					m_desc = json.ChildValue( "description" );
 					m_type = json.ChildValue( "type" );
