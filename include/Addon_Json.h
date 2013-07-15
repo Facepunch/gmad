@@ -24,7 +24,7 @@ class CAddonJson
 			//
 			// Parse the JSON
 			//
-			if ( !Bootil::Data::Json::Import( tree, strFileContents ) )
+			if ( !Bootil::Data::Json::Import( tree, strFileContents.c_str() ) )
 			{
 				m_strError = "Couldn't parse json";
 				return;
