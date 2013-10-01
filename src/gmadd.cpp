@@ -61,6 +61,31 @@ int main( int argc, char* argv[] )
 	//
 	// Help
 	//
-	Bootil::Output::Msg( "Usage:\n\n" );
+	Bootil::Output::Msg( "Usage: gmad <action> [options]\n" );
+
+	Bootil::Output::Msg( "  Actions:\n" );
+	Bootil::Output::Msg( "    create                - Create a new .gma file\n" );
+	Bootil::Output::Msg( "      Options:\n" );
+	Bootil::Output::Msg( "        -folder <folder>  - Specifies the folder in which the addon resides\n" );
+	Bootil::Output::Msg( "        -out <file>       - Specifies the .gma file\n" );
+	Bootil::Output::Msg( "        -warninvalid      - Don't stop on disallowed files, only warn\n\n" );
+	Bootil::Output::Msg( "    extract               - Extract an existing .gma file\n" );
+	Bootil::Output::Msg( "      Options:\n" );
+	Bootil::Output::Msg( "        -file <file>      - Specifies the .gma file which is to be extracted\n" );
+	Bootil::Output::Msg( "        -out <folder>     - Specifies the destination folder\n\n" );
+
+	Bootil::Output::Msg( "  Examples:\n" );
+	Bootil::Output::Msg( "  Create a new .gma file:\n" );
+	Console::FGColorPush( Console::White );
+	Bootil::Output::Msg( "gmad create -folder C:\\path\\to\\addon\\folder\\ -out C:\\where\\to\\save\\file\\out.gma\n" );
+	Console::FGColorPop();
+	Bootil::Output::Msg( "  Extract an existing .gma file into its parent folder:\n" );
+	Console::FGColorPush( Console::White );
+	Bootil::Output::Msg( "gmad extract -file C:\\steam\\etc\\garrysmod\\addons\\my_addon_12345.gma\n" );
+	Console::FGColorPop();
+	Bootil::Output::Msg( "  Extract an existing .gma file into another folder:\n" );
+	Console::FGColorPush( Console::White );
+	Bootil::Output::Msg( "gmad extract -file C:\\etc\\garrysmod\\addons\\my_addon_12345.gma -out C:\\folder\n" );
+	Console::FGColorPop();
 	return 0;
 }
