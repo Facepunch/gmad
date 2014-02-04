@@ -87,7 +87,7 @@ namespace Addon
 					Addon::FileEntry entry;
 					entry.strName		= m_buffer.ReadString();
 					entry.iSize			= m_buffer.ReadType<long long>();
-					entry.iCRC			= m_buffer.ReadType<unsigned long>();
+					entry.iCRC			= m_buffer.ReadType<unsigned int>();
 					entry.iOffset		= iOffset;
 					entry.iFileNumber	= iFileNumber;
 					m_index.push_back( entry );

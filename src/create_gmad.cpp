@@ -86,7 +86,7 @@ namespace CreateAddon
 			buffer.WriteType( ( unsigned int ) iFileNum );					// File number (4)
 			buffer.WriteString( String::GetLower( *f ) );					// File name (all lower case!) (n)
 			buffer.WriteType( ( long long ) iSize );							// File size (8)
-			buffer.WriteType( ( unsigned long ) iCRC );						// File CRC (4)
+			buffer.WriteType( ( unsigned int ) iCRC );						// File CRC (4)
 			Output::Msg( "File index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
 		}
 		// Zero to signify end of files
