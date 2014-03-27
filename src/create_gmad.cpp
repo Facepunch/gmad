@@ -63,9 +63,9 @@ namespace CreateAddon
 		buffer.Write( Addon::Ident, 4 );				// Ident (4)
 		buffer.WriteType( ( char ) Addon::Version );		// Version (1)
 		// SteamID (8) [unused]
-		buffer.WriteType( ( unsigned long long ) 0ULL );
+		buffer.WriteType( ( uint64_t ) 0ULL );
 		// TimeStamp (8)
-		buffer.WriteType( ( unsigned long long ) Bootil::Time::UnixTimestamp() );
+		buffer.WriteType( ( uint64_t ) Bootil::Time::UnixTimestamp() );
 		// Required content (a list of strings)
 		buffer.WriteType( ( char ) 0 ); // signifies nothing
 		// Addon Name (n)
@@ -75,23 +75,23 @@ namespace CreateAddon
 		// Addon Author (n) [unused]
 		buffer.WriteString( "Author Name" );
 		// Addon Version (4) [unused]
-		buffer.WriteType( ( int ) 1 );
+		buffer.WriteType( ( int32_t ) 1 );
 		// File list
-		unsigned int iFileNum = 0;
+		uint32_t iFileNum = 0;
 		BOOTIL_FOREACH( f, files, String::List )
 		{
-			unsigned long	iCRC = Bootil::File::CRC( strFolder + *f );
-			long long		iSize = Bootil::File::Size( strFolder + *f );
+			uint32_t	iCRC = Bootil::File::CRC( strFolder + *f );
+			int64_t		iSize = Bootil::File::Size( strFolder + *f );
 			iFileNum++;
-			buffer.WriteType( ( unsigned int ) iFileNum );					// File number (4)
+			buffer.WriteType( ( uint32_t ) iFileNum );					// File number (4)
 			buffer.WriteString( String::GetLower( *f ) );					// File name (all lower case!) (n)
-			buffer.WriteType( ( long long ) iSize );							// File size (8)
-			buffer.WriteType( ( unsigned long ) iCRC );						// File CRC (4)
+			buffer.WriteType( ( int64_t ) iSize );							// File size (8)
+			buffer.WriteType( ( uint32_t ) iCRC );						// File CRC (4)
 			Output::Msg( "File index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
 		}
 		// Zero to signify end of files
 		iFileNum = 0;
-		buffer.WriteType( ( unsigned int ) iFileNum );
+		buffer.WriteType( ( uint32_t ) iFileNum );
 		// The files
 		BOOTIL_FOREACH( f, files, String::List )
 		{
@@ -108,7 +108,7 @@ namespace CreateAddon
 			buffer.WriteBuffer( filebuffer );
 		}
 		// CRC what we've written (to verify that the download isn't shitted) (4)
-		unsigned long AddonCRC = Bootil::Hasher::CRC32::Easy( buffer.GetBase(), buffer.GetWritten() );
+		uint32_t AddonCRC = Bootil::Hasher::CRC32::Easy( buffer.GetBase(), buffer.GetWritten() );
 		buffer.WriteType( AddonCRC );
 		return true;
 	}

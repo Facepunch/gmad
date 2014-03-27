@@ -2,8 +2,10 @@
 #ifndef ADDONREADER_H
 #define ADDONREADER_H
 
+#include <stdint.h>
 #include "Bootil/Bootil.h"
 #include "AddonFormat.h"
+
 
 //
 //
@@ -53,8 +55,8 @@ namespace Addon
 				if ( m_fmtversion > Addon::Version )
 					return false;
 
-				m_buffer.ReadType<unsigned long long>(); // steamid
-				m_buffer.ReadType<unsigned long long>(); // timestamp
+				m_buffer.ReadType<uint64_t>(); // steamid
+				m_buffer.ReadType<uint64_t>(); // timestamp
 
 				//
 				// Required content (not used at the moment, just read out)
@@ -75,19 +77,19 @@ namespace Addon
 				//
 				// Addon version - unused
 				//
-				m_buffer.ReadType<int>();
+				m_buffer.ReadType<int32_t>();
 				//
 				// File index
 				//
-				int iFileNumber = 1;
-				int iOffset = 0;
+				int32_t iFileNumber = 1;
+				int32_t iOffset = 0;
 
-				while ( m_buffer.ReadType<unsigned int>() != 0 )
+				while ( m_buffer.ReadType<uint32_t>() != 0 )
 				{
 					Addon::FileEntry entry;
 					entry.strName		= m_buffer.ReadString();
-					entry.iSize			= m_buffer.ReadType<long long>();
-					entry.iCRC			= m_buffer.ReadType<unsigned long>();
+					entry.iSize			= m_buffer.ReadType<int64_t>();
+					entry.iCRC			= m_buffer.ReadType<uint32_t>();
 					entry.iOffset		= iOffset;
 					entry.iFileNumber	= iFileNumber;
 					m_index.push_back( entry );
@@ -118,7 +120,7 @@ namespace Addon
 			//
 			// Return the FileEntry for a FileID
 			//
-			bool GetFile( unsigned int iFileID, Addon::FileEntry& outfile )
+			bool GetFile( uint32_t iFileID, Addon::FileEntry& outfile )
 			{
 				BOOTIL_FOREACH( file, m_index, Addon::FileEntry::List )
 				{
@@ -134,7 +136,7 @@ namespace Addon
 			//
 			// Read a fileid from the addon into the buffer
 			//
-			bool ReadFile( unsigned int iFileID, Bootil::Buffer& buffer )
+			bool ReadFile( uint32_t iFileID, Bootil::Buffer& buffer )
 			{
 				Addon::FileEntry file;
 
@@ -161,7 +163,7 @@ namespace Addon
 			}
 
 			const Addon::FileEntry::List& GetList() { return m_index; }
-			unsigned int GetFormatVersion() { return m_fmtversion; }
+			uint32_t GetFormatVersion() { return m_fmtversion; }
 			const Bootil::Buffer& GetBuffer() { return m_buffer; }
 			Bootil::BString Title() { return m_name; }
 			Bootil::BString Description() { return m_desc; }
@@ -178,7 +180,7 @@ namespace Addon
 			Bootil::BString			m_desc;
 			Bootil::BString			m_type;
 			Addon::FileEntry::List	m_index;
-			unsigned long			m_fileblock;
+			uint32_t			m_fileblock;
 
 			Bootil::String::List	m_tags;
 
