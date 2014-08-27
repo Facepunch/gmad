@@ -6,8 +6,7 @@
 
 using namespace Bootil;
 
-
-int ExtractAddonFile( Bootil::BString strFile, Bootil::BString strOutPath )
+int ExtractAddonFile( BString strFile, BString strOutPath )
 {
 	Output::Msg( "Opening \"%s\"\n", strFile.c_str() );
 

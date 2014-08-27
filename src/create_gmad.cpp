@@ -8,7 +8,7 @@ using namespace Bootil;
 
 namespace CreateAddon
 {
-	bool VerifyFiles( Bootil::String::List& files, bool warnInvalid )
+	bool VerifyFiles( String::List& files, bool warnInvalid )
 	{
 		bool bOk = true;
 
@@ -21,12 +21,12 @@ namespace CreateAddon
 			bOk = false;
 		}
 
-		Bootil::String::List old_files = files;
+		String::List old_files = files;
 		files.clear();
 		//
 		// Print each found file, check they're ok
 		//
-		BOOTIL_FOREACH( file, old_files, Bootil::String::List )
+		BOOTIL_FOREACH( file, old_files, String::List )
 		{
 			Output::Msg( "\t%s\n", file->c_str() );
 
@@ -57,7 +57,7 @@ namespace CreateAddon
 	//
 	// Create an uncompressed GMAD file from a list of files
 	//
-	bool Create( Bootil::Buffer& buffer, Bootil::BString strFolder, Bootil::String::List& files, Bootil::BString strTitle, Bootil::BString strDescription )
+	bool Create( Buffer& buffer, BString strFolder, String::List& files, BString strTitle, BString strDescription )
 	{
 		// Header (5)
 		buffer.Write( Addon::Ident, 4 );				// Ident (4)
@@ -65,7 +65,7 @@ namespace CreateAddon
 		// SteamID (8) [unused]
 		buffer.WriteType( ( unsigned long long ) 0ULL );
 		// TimeStamp (8)
-		buffer.WriteType( ( unsigned long long ) Bootil::Time::UnixTimestamp() );
+		buffer.WriteType( ( unsigned long long ) Time::UnixTimestamp() );
 		// Required content (a list of strings)
 		buffer.WriteType( ( char ) 0 ); // signifies nothing
 		// Addon Name (n)
@@ -80,14 +80,15 @@ namespace CreateAddon
 		unsigned int iFileNum = 0;
 		BOOTIL_FOREACH( f, files, String::List )
 		{
-			unsigned long	iCRC = Bootil::File::CRC( strFolder + *f );
-			long long		iSize = Bootil::File::Size( strFolder + *f );
+			unsigned long	iCRC = File::CRC( strFolder + *f );
+			long long		iSize = File::Size( strFolder + *f );
 			iFileNum++;
 			buffer.WriteType( ( unsigned int ) iFileNum );					// File number (4)
 			buffer.WriteString( String::GetLower( *f ) );					// File name (all lower case!) (n)
-			buffer.WriteType( ( long long ) iSize );							// File size (8)
+			buffer.WriteType( ( long long ) iSize );						// File size (8)
 			buffer.WriteType( ( unsigned long ) iCRC );						// File CRC (4)
-			Output::Msg( "File index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
+
+			//Output::Msg( "File index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
 		}
 		// Zero to signify end of files
 		iFileNum = 0;
@@ -95,9 +96,9 @@ namespace CreateAddon
 		// The files
 		BOOTIL_FOREACH( f, files, String::List )
 		{
-			Output::Msg( "Adding %s\n", f->c_str() );
+			//Output::Msg( "Adding %s\n", f->c_str() );
 			AutoBuffer filebuffer;
-			Bootil::File::Read( strFolder + *f, filebuffer );
+			File::Read( strFolder + *f, filebuffer );
 
 			if ( filebuffer.GetWritten() == 0 )
 			{
@@ -108,13 +109,13 @@ namespace CreateAddon
 			buffer.WriteBuffer( filebuffer );
 		}
 		// CRC what we've written (to verify that the download isn't shitted) (4)
-		unsigned long AddonCRC = Bootil::Hasher::CRC32::Easy( buffer.GetBase(), buffer.GetWritten() );
+		unsigned long AddonCRC = Hasher::CRC32::Easy( buffer.GetBase(), buffer.GetWritten() );
 		buffer.WriteType( AddonCRC );
 		return true;
 	}
 }
 
-int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile, bool warnInvalid  )
+int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid  )
 {
 	bool bErrors = false;
 	//
@@ -123,12 +124,19 @@ int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile, bool
 	String::File::FixSlashes( strFolder, "\\", "/" );
 	String::Util::TrimRight( strFolder, "/" );
 	strFolder = strFolder + "/";
+
 	//
 	// Make sure OutFile ends in .gma
 	//
+	if ( strOutfile.empty() )
+	{
+		strOutfile = strFolder;
+		String::Util::TrimRight( strOutfile, "/" );
+	}
 	String::File::StripExtension( strOutfile );
 	strOutfile += ".gma";
 	Output::Msg( "Looking in folder \"%s\"\n", strFolder.c_str() );
+
 	//
 	// Load the Addon Info file
 	//
@@ -143,16 +151,18 @@ int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile, bool
 	//
 	// Get a list of files in the specified folder
 	//
-	Bootil::String::List files;
-	Bootil::File::GetFilesInFolder( strFolder, files, true );
+	String::List files;
+	File::GetFilesInFolder( strFolder, files, true );
+
 	//
 	// Let the addon json remove the ignored files
 	//
 	addoninfo.RemoveIgnoredFiles( files );
+
 	//
 	// Sort the list into alphabetical order, no real reason - we're just ODC
 	//
-	Bootil::String::SortList( files, false );
+	String::SortList( files, false );
 
 	//
 	// Verify
@@ -166,7 +176,7 @@ int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile, bool
 	//
 	// Create an addon file in a buffer
 	//
-	Bootil::AutoBuffer buffer;
+	AutoBuffer buffer;
 
 	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle(), addoninfo.BuildDescription() ) )
 	{
@@ -186,6 +196,6 @@ int CreateAddonFile( Bootil::BString strFolder, Bootil::BString strOutfile, bool
 	//
 	// Success!
 	//
-	Output::Msg( "Successfully saved to \"%s\" [%s]\n", strOutfile.c_str(), Bootil::String::Format::Memory( buffer.GetWritten() ).c_str() );
+	Output::Msg( "Successfully saved to \"%s\" [%s]\n", strOutfile.c_str(), String::Format::Memory( buffer.GetWritten() ).c_str() );
 	return 0;
 }
