@@ -22,7 +22,7 @@ namespace Addon
 	{
 		Bootil::BString	strName;
 		long long		iSize;
-		unsigned long	iCRC;
+		unsigned int	iCRC;
 		unsigned int	iFileNumber;
 		long long		iOffset;
 

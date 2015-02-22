@@ -80,13 +80,13 @@ namespace CreateAddon
 		unsigned int iFileNum = 0;
 		BOOTIL_FOREACH( f, files, String::List )
 		{
-			unsigned long	iCRC = File::CRC( strFolder + *f );
+			unsigned int	iCRC = File::CRC( strFolder + *f );
 			long long		iSize = File::Size( strFolder + *f );
 			iFileNum++;
 			buffer.WriteType( ( unsigned int ) iFileNum );					// File number (4)
 			buffer.WriteString( String::GetLower( *f ) );					// File name (all lower case!) (n)
 			buffer.WriteType( ( long long ) iSize );						// File size (8)
-			buffer.WriteType( ( unsigned long ) iCRC );						// File CRC (4)
+			buffer.WriteType( ( unsigned int ) iCRC );						// File CRC (4)
 
 			//Output::Msg( "File index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
 		}
@@ -109,7 +109,7 @@ namespace CreateAddon
 			buffer.WriteBuffer( filebuffer );
 		}
 		// CRC what we've written (to verify that the download isn't shitted) (4)
-		unsigned long AddonCRC = Hasher::CRC32::Easy( buffer.GetBase(), buffer.GetWritten() );
+		unsigned int AddonCRC = Hasher::CRC32::Easy( buffer.GetBase(), buffer.GetWritten() );
 		buffer.WriteType( AddonCRC );
 		return true;
 	}
