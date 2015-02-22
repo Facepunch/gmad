@@ -80,7 +80,7 @@ namespace Addon
 				// File index
 				//
 				int iFileNumber = 1;
-				int iOffset = 0;
+				long long iOffset = 0;
 
 				while ( m_buffer.ReadType<unsigned int>() != 0 )
 				{
