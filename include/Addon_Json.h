@@ -123,6 +123,12 @@ class CAddonJson
 				if ( *f == "addon.json" ) continue;
 
 				//
+				// Don't include OS X metadata files
+				//
+				if ( *f == ".DS_Store" ) continue;
+				if ( Bootil::String::Test::Wildcard( "*/.DS_Store", *f ) ) continue;
+
+				//
 				// Check against our loaded ignores list
 				//
 				BOOTIL_FOREACH( ignore, m_Ignores, Bootil::String::List )
