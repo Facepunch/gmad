@@ -1,7 +1,7 @@
 {
 	"title"		:	"My Test Addon",
-	"type"		:	"gamemode",
-	"tags"		:	[ "fun", "cartoon" ],
+	"type"		:	"weapon",
+	"tags"		:	[ "fun", ],
 	"ignore"	:
 	[
 		"*.psd",
