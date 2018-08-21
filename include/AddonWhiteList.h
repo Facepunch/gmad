@@ -18,6 +18,7 @@ namespace Addon
 			"scenes/*.vcd",
 			"particles/*.pcf",
 			"resource/fonts/*.ttf",
+			"scripts/*.txt
 			"scripts/vehicles/*.txt",
 			"resource/localization/*/*.properties",
 			"maps/*.bsp",
