@@ -20,6 +20,8 @@ namespace Addon
 			"resource/fonts/*.ttf",
 			"scripts/vehicles/*.txt",
 			"resource/localization/*/*.properties",
+			"data/*.txt",
+			"data/*.dat",
 			"maps/*.bsp",
 			"maps/*.nav",
 			"maps/*.ain",
