@@ -123,6 +123,11 @@ class CAddonJson
 				if ( *f == "addon.json" ) continue;
 
 				//
+				// Don't include Windows config file
+				//
+				if ( *f == "desktop.ini" ) continue;
+
+				//
 				// Don't include OS X metadata files
 				//
 				if ( *f == ".DS_Store" ) continue;
