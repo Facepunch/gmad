@@ -123,6 +123,13 @@ class CAddonJson
 				if ( *f == "addon.json" ) continue;
 
 				//
+				// Don't include Windows specifiic files
+				//
+				Bootil::BString strLow = Bootil::String::GetLower( *f );
+				if ( Bootil::String::Test::Wildcard( "*thumbs.db", strLow ) ) continue;
+				if ( Bootil::String::Test::Wildcard( "*desktop.ini", strLow ) ) continue;
+
+				//
 				// Don't include OS X metadata files
 				//
 				if ( *f == ".DS_Store" ) continue;
