@@ -19,7 +19,6 @@ solution "GMad"
 	}
 	
 	language "C++"
-	location ( "/" )
 	flags { "Symbols", "NoEditAndContinue", "NoPCH", "StaticRuntime", "EnableSSE" }
 	targetdir ( _OPTIONS.outdir )
 	includedirs { "include/", _OPTIONS.bootil_inc }
