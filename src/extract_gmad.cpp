@@ -6,17 +6,6 @@
 
 using namespace Bootil;
 
-const BString badChars = ":?\"<>|"; // Not including slashes
-BString ShouldExtract( BString strFile ) {
-	for ( unsigned int i = 0; i < strFile.length(); i++ ) {
-		if ( strFile[ i ] < 32 || ( badChars.find( strFile[ i ] ) != BString::npos ) ) {
-			return "illegal characters in filename";
-		}
-	}
-
-	return "";
-}
-
 int ExtractAddonFile( BString strFile, BString strOutPath )
 {
 	Output::Msg( "Opening \"%s\"\n", strFile.c_str() );
@@ -35,8 +24,8 @@ int ExtractAddonFile( BString strFile, BString strOutPath )
 	String::File::FixSlashes( strOutPath );
 	String::Util::TrimRight( strOutPath, "/" );
 	strOutPath = strOutPath + "/";
-	Addon::Reader addon;
 
+	Addon::Reader addon;
 	if ( !addon.ReadFromFile( strFile ) )
 	{
 		Output::Warning( "There was a problem opening the file\n" );
@@ -50,6 +39,7 @@ int ExtractAddonFile( BString strFile, BString strOutPath )
 	}
 
 	Output::Msg( "Extracting Files:\n" );
+	uint32_t badFileCount = 0;
 	BOOTIL_FOREACH_CONST( entry, addon.GetList(), Addon::FileEntry::List )
 	{
 		Output::Msg( "\t%s [%s]\n", entry->strName.c_str(), String::Format::Memory( entry->iSize ).c_str() );
@@ -59,16 +49,19 @@ int ExtractAddonFile( BString strFile, BString strOutPath )
 		
 		// Load the file into the buffer
 		AutoBuffer filecontents;
-
-		BString err = ShouldExtract( entry->strName );
-		if ( err != "" )
-		{
-			Output::Warning( "\t\tNot extracting, %s!\n", err.c_str() );
-		}
-		else if ( addon.ReadFile( entry->iFileNumber, filecontents ) )
+		if ( addon.ReadFile( entry->iFileNumber, filecontents ) )
 		{
 			// Write the file to disk
-			File::Write( strOutPath + entry->strName, filecontents );
+			if ( !File::Write( strOutPath + entry->strName, filecontents ) )
+			{
+				BString genPath = "badnames/" + String::ToString( badFileCount ) + ".unk";
+				Output::Warning( "\t\tCouldn't write, trying to write as '%s'..\n", genPath.c_str() );
+
+				// Try to write the file but don't use any of its name, since we don't know which part of it may have caused the problem
+				File::CreateFolder( strOutPath + "badnames/", true );
+				File::Write( strOutPath + genPath, filecontents );
+				badFileCount++;
+			}
 		}
 		else
 		{
