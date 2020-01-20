@@ -77,31 +77,35 @@ namespace CreateAddon
 		// Addon Version (4) [unused]
 		buffer.WriteType( ( int32_t ) 1 );
 
+		Output::Msg( "Writing file list...\n" );
+
 		// File list
 		uint32_t iFileNum = 0;
 		BOOTIL_FOREACH( f, files, String::List )
 		{
-			uint32_t	iCRC = File::CRC( strFolder + *f );
-			int64_t		iSize = File::Size( strFolder + *f );
+			uint32_t iCRC = File::CRC( strFolder + *f );
+			int64_t	iSize = File::Size( strFolder + *f );
 			iFileNum++;
 			buffer.WriteType( ( uint32_t ) iFileNum );					// File number (4)
 			buffer.WriteString( String::GetLower( *f ) );					// File name (all lower case!) (n)
 			buffer.WriteType( ( int64_t ) iSize );						// File size (8)
 			buffer.WriteType( ( uint32_t ) iCRC );						// File CRC (4)
 
-			//Output::Msg( "File index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
+			//Output::Msg( "\tFile index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
 		}
 
 		// Zero to signify end of files
 		iFileNum = 0;
 		buffer.WriteType( ( uint32_t ) iFileNum );
 
+		Output::Msg( "Writing files...\n" );
+
 		// The files
 		BOOTIL_FOREACH( f, files, String::List )
 		{
-			//Output::Msg( "Adding %s\n", f->c_str() );
 			AutoBuffer filebuffer;
-			File::Read( strFolder + *f, filebuffer );
+			bool res = File::Read( strFolder + *f, filebuffer );
+			//Output::Msg( "\tReading %s bool = %i %u\n", f->c_str(), res, filebuffer.GetWritten() );
 
 			if ( filebuffer.GetWritten() == 0 )
 			{
@@ -109,7 +113,14 @@ namespace CreateAddon
 				return false;
 			}
 
+			unsigned int before = buffer.GetWritten();
 			buffer.WriteBuffer( filebuffer );
+			unsigned int diff = buffer.GetWritten() - before;
+			if ( diff < 1 )
+			{
+				Output::Warning( "Failed to write file '%s' - written %llu bytes! (Can't grow buffer?)\n", ( *f ).c_str(), diff );
+				return false;
+			}
 		}
 
 		// CRC what we've written (to verify that the download isn't shitted) (4)
@@ -182,12 +193,13 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid  )
 	// Create an addon file in a buffer
 	//
 	AutoBuffer buffer;
-
 	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle(), addoninfo.BuildDescription() ) )
 	{
 		Output::Warning( "Failed to create the addon\n" );
 		return 1;
 	}
+	
+	Output::Msg( "Writing the .gma...\n" );
 
 	//
 	// Save the buffer to the provided name
