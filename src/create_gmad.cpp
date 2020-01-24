@@ -113,9 +113,9 @@ namespace CreateAddon
 				return false;
 			}
 
-			unsigned int before = buffer.GetWritten();
+			uint64_t before = buffer.GetWritten();
 			buffer.WriteBuffer( filebuffer );
-			unsigned int diff = buffer.GetWritten() - before;
+			uint64_t diff = buffer.GetWritten() - before;
 			if ( diff < 1 )
 			{
 				Output::Warning( "Failed to write file '%s' - written %llu bytes! (Can't grow buffer?)\n", ( *f ).c_str(), diff );
