@@ -59,9 +59,13 @@ namespace CreateAddon
 	//
 	bool Create( Buffer& buffer, BString strFolder, String::List& files, BString strTitle, BString strDescription )
 	{
+		// CRCs are unused by the game
+		bool doCRCs = true;
+		if ( CommandLine::HasSwitch( "-nocrc" ) ) doCRCs = false;
+
 		// Header (5)
 		buffer.Write( Addon::Ident, 4 );				// Ident (4)
-		buffer.WriteType( ( char ) Addon::Version );		// Version (1)
+		buffer.WriteType( ( char ) Addon::Version );	// Version (1)
 		// SteamID (8) [unused]
 		buffer.WriteType( ( uint64_t ) 0ULL );
 		// TimeStamp (8)
@@ -83,13 +87,23 @@ namespace CreateAddon
 		uint32_t iFileNum = 0;
 		BOOTIL_FOREACH( f, files, String::List )
 		{
-			uint32_t iCRC = File::CRC( strFolder + *f );
 			int64_t	iSize = File::Size( strFolder + *f );
+			if ( iSize <= 0 ) {
+				Output::Warning( "File '%s' seems to be empty, or we couldn't get its size! (errno=%i)\n", ( strFolder + *f ).c_str(), errno );
+				return false;
+			}
+
 			iFileNum++;
-			buffer.WriteType( ( uint32_t ) iFileNum );					// File number (4)
-			buffer.WriteString( String::GetLower( *f ) );					// File name (all lower case!) (n)
-			buffer.WriteType( ( int64_t ) iSize );						// File size (8)
-			buffer.WriteType( ( uint32_t ) iCRC );						// File CRC (4)
+			buffer.WriteType( ( uint32_t ) iFileNum );			// File number (4)
+			buffer.WriteString( String::GetLower( *f ) );		// File name (all lower case!) (n)
+			buffer.WriteType( ( int64_t ) iSize );				// File size (8)
+
+			if ( doCRCs ) {
+				uint32_t iCRC = File::CRC( strFolder + *f );
+				buffer.WriteType( ( uint32_t ) iCRC );			// File CRC (4)
+			} else {
+				buffer.WriteType( ( uint32_t ) 0 );
+			}
 
 			//Output::Msg( "\tFile index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
 		}
@@ -109,7 +123,7 @@ namespace CreateAddon
 
 			if ( filebuffer.GetWritten() == 0 )
 			{
-				Output::Warning( "File %s seems to be empty (or we couldn't read it)\n", ( strFolder + *f ).c_str() );
+				Output::Warning( "File '%s' seems to be empty (or we couldn't read it)\n", ( strFolder + *f ).c_str() );
 				return false;
 			}
 
@@ -124,8 +138,12 @@ namespace CreateAddon
 		}
 
 		// CRC what we've written (to verify that the download isn't shitted) (4)
-		uint32_t AddonCRC = Hasher::CRC32::Easy( buffer.GetBase(), buffer.GetWritten() );
-		buffer.WriteType( AddonCRC );
+		if ( doCRCs ) {
+			uint32_t AddonCRC = Hasher::CRC32::Easy( buffer.GetBase(), buffer.GetWritten() );
+			buffer.WriteType<uint32_t>( AddonCRC );
+		} else {
+			buffer.WriteType<uint32_t>( 0 );
+		}
 
 		return true;
 	}
