@@ -105,7 +105,7 @@ namespace CreateAddon
 				buffer.WriteType( ( uint32_t ) 0 );
 			}
 
-			//Output::Msg( "\tFile index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
+			Output::Msg( "\tFile index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
 		}
 
 		// Zero to signify end of files
@@ -119,7 +119,7 @@ namespace CreateAddon
 		{
 			AutoBuffer filebuffer;
 			bool res = File::Read( strFolder + *f, filebuffer );
-			//Output::Msg( "\tReading %s bool = %i %u\n", f->c_str(), res, filebuffer.GetWritten() );
+			Output::Msg( "\tReading %s bool = %i %u\n", f->c_str(), res, filebuffer.GetWritten() );
 
 			if ( filebuffer.GetWritten() == 0 )
 			{
