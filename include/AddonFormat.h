@@ -36,7 +36,7 @@ namespace Addon
 	namespace Tags
 	{
 		//
-		//  Only one of these
+		// Only one of these
 		//
 		static const char* Type[] =
 		{

@@ -3,6 +3,7 @@
 #include "AddonWhiteList.h"
 #include "AddonFormat.h"
 #include "Addon_Json.h"
+#include <unordered_map>
 
 using namespace Bootil;
 
@@ -10,7 +11,10 @@ namespace CreateAddon
 {
 	bool VerifyFiles( String::List& files, bool warnInvalid )
 	{
+		bool quiet = CommandLine::HasSwitch( "-quiet" );
+
 		bool bOk = true;
+		std::unordered_map<std::string, std::string> errorFiles;
 
 		//
 		// Bail out if there's no files
@@ -23,34 +27,49 @@ namespace CreateAddon
 
 		String::List old_files = files;
 		files.clear();
+
 		//
 		// Print each found file, check they're ok
 		//
 		BOOTIL_FOREACH( file, old_files, String::List )
 		{
-			Output::Msg( "\t%s\n", file->c_str() );
+			if ( !quiet ) Output::Msg( "\t%s\n", file->c_str() );
 
 			//
 			// Check the file against the whitelist
 			// Lowercase the name (addon filesystem is case insensitive)
 			//
 			if ( Addon::WhiteList::Check( String::GetLower( *file ) ) )
+			{
 				files.push_back( *file );
+			}
 			else
 			{
-				Output::Warning( "\t\t[Not allowed by whitelist]\n" );
-				if(!warnInvalid)
-					bOk = false;
+				if ( !quiet ) Output::Warning( "\t\t[Not allowed by whitelist]\n" );
+				if ( !warnInvalid ) bOk = false;
+
+				errorFiles.insert_or_assign( file->c_str(), "Not allowed by whitelist" );
 			}	
 
 			//
 			// Warn that we're gonna lowercase the filename
 			//
-			if ( String::GetLower( *file )  != *file )
+			if ( String::GetLower( *file ) != *file )
 			{
-				Output::Warning( "\t\t[Filename contains captial letters]\n" );
+				if ( !quiet ) Output::Warning( "\t\t[Filename contains captial letters]\n" );
 			}
 		}
+		
+		if ( !bOk )
+		{
+			Output::Msg( "The following files did not pass verification:\n" );
+			
+			for ( auto& it: errorFiles )
+			{
+				Output::Warning( "\t%s - %s\n", it.first.c_str(), it.second.c_str() );
+			}
+		}
+
 		return bOk;
 	}
 
@@ -59,6 +78,8 @@ namespace CreateAddon
 	//
 	bool Create( Buffer& buffer, BString strFolder, String::List& files, BString strTitle, BString strDescription )
 	{
+		bool quiet = CommandLine::HasSwitch( "-quiet" );
+
 		// CRCs are unused by the game
 		bool doCRCs = true;
 		if ( CommandLine::HasSwitch( "-nocrc" ) ) doCRCs = false;
@@ -88,7 +109,8 @@ namespace CreateAddon
 		BOOTIL_FOREACH( f, files, String::List )
 		{
 			int64_t	iSize = File::Size( strFolder + *f );
-			if ( iSize <= 0 ) {
+			if ( iSize <= 0 )
+			{
 				Output::Warning( "File '%s' seems to be empty, or we couldn't get its size! (errno=%i)\n", ( strFolder + *f ).c_str(), errno );
 				return false;
 			}
@@ -98,10 +120,13 @@ namespace CreateAddon
 			buffer.WriteString( String::GetLower( *f ) );		// File name (all lower case!) (n)
 			buffer.WriteType( ( int64_t ) iSize );				// File size (8)
 
-			if ( doCRCs ) {
+			if ( doCRCs )
+			{
 				uint32_t iCRC = File::CRC( strFolder + *f );
 				buffer.WriteType( ( uint32_t ) iCRC );			// File CRC (4)
-			} else {
+			}
+			else
+			{
 				buffer.WriteType( ( uint32_t ) 0 );
 			}
 
@@ -117,6 +142,8 @@ namespace CreateAddon
 		// The files
 		BOOTIL_FOREACH( f, files, String::List )
 		{
+			if ( !quiet ) Output::Msg( "\tWriting %s...\n", f->c_str() );
+
 			AutoBuffer filebuffer;
 			bool res = File::Read( strFolder + *f, filebuffer );
 			//Output::Msg( "\tReading %s bool = %i %u\n", f->c_str(), res, filebuffer.GetWritten() );
@@ -138,10 +165,13 @@ namespace CreateAddon
 		}
 
 		// CRC what we've written (to verify that the download isn't shitted) (4)
-		if ( doCRCs ) {
+		if ( doCRCs )
+		{
 			uint32_t AddonCRC = Hasher::CRC32::Easy( buffer.GetBase(), buffer.GetWritten() );
 			buffer.WriteType<uint32_t>( AddonCRC );
-		} else {
+		}
+		else
+		{
 			buffer.WriteType<uint32_t>( 0 );
 		}
 
@@ -149,9 +179,11 @@ namespace CreateAddon
 	}
 }
 
-int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid  )
+int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid )
 {
 	bool bErrors = false;
+	bool quiet = CommandLine::HasSwitch( "-quiet" );
+
 	//
 	// Make sure there's a slash on the end
 	//
@@ -175,7 +207,6 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid  )
 	// Load the Addon Info file
 	//
 	CAddonJson addoninfo( strFolder + "addon.json" );
-
 	if ( !addoninfo.GetError().empty() )
 	{
 		Output::Warning( "%s error: %s\n", ( strFolder + "addon.json" ).c_str(), addoninfo.GetError().c_str() );
@@ -191,7 +222,8 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid  )
 	//
 	// Let the addon json remove the ignored files
 	//
-	addoninfo.RemoveIgnoredFiles( files );
+	Output::Msg( "Removing ignored files...\n" );
+	addoninfo.RemoveIgnoredFiles( files, quiet );
 
 	//
 	// Sort the list into alphabetical order, no real reason - we're just ODC
@@ -201,6 +233,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid  )
 	//
 	// Verify
 	//
+	Output::Msg( "Verifying file list...\n" );
 	if ( !CreateAddon::VerifyFiles( files, warnInvalid ) )
 	{
 		Output::Warning( "File list verification failed\n" );
@@ -232,5 +265,6 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid  )
 	// Success!
 	//
 	Output::Msg( "Successfully saved to \"%s\" [%s]\n", strOutfile.c_str(), String::Format::Memory( buffer.GetWritten() ).c_str() );
+	Output::Msg( "Files ignored: %i\n", addoninfo.m_IgnoredFiles );
 	return 0;
 }

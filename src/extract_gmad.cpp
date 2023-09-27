@@ -8,6 +8,8 @@ using namespace Bootil;
 
 int ExtractAddonFile( BString strFile, BString strOutPath )
 {
+	bool quiet = CommandLine::HasSwitch( "-quiet" );
+
 	Output::Msg( "Opening \"%s\"\n", strFile.c_str() );
 
 	//
@@ -42,7 +44,7 @@ int ExtractAddonFile( BString strFile, BString strOutPath )
 	uint32_t badFileCount = 0;
 	BOOTIL_FOREACH_CONST( entry, addon.GetList(), Addon::FileEntry::List )
 	{
-		Output::Msg( "\t%s [%s]\n", entry->strName.c_str(), String::Format::Memory( entry->iSize ).c_str() );
+		if ( !quiet ) Output::Msg( "\t%s [%s]\n", entry->strName.c_str(), String::Format::Memory( entry->iSize ).c_str() );
 		
 		// Make sure folders exists
 		File::CreateFolder( strOutPath + String::File::GetStripFilename( entry->strName ), true );
@@ -52,10 +54,12 @@ int ExtractAddonFile( BString strFile, BString strOutPath )
 		if ( addon.ReadFile( entry->iFileNumber, filecontents ) )
 		{
 			// Write the file to disk
-			if ( !File::Write( strOutPath + entry->strName, filecontents ) )
+			if ( Bootil::String::Test::Contains( entry->strName, "./" ) || !File::Write( strOutPath + entry->strName, filecontents ) )
 			{
 				BString genPath = "badnames/" + String::ToString( badFileCount ) + ".unk";
-				Output::Warning( "\t\tCouldn't write, trying to write as '%s'..\n", genPath.c_str() );
+				
+				if ( !quiet ) Output::Warning( "\t\tCouldn't write, trying to write as '%s'..\n", genPath.c_str() );
+				else Output::Warning( "\t\tCouldn't write to '%s', trying to write as '%s'..\n", entry->strName.c_str(), genPath.c_str() );
 
 				// Try to write the file but don't use any of its name, since we don't know which part of it may have caused the problem
 				File::CreateFolder( strOutPath + "badnames/", true );
@@ -65,7 +69,8 @@ int ExtractAddonFile( BString strFile, BString strOutPath )
 		}
 		else
 		{
-			Output::Warning( "\t\tCouldn't extract!\n" );
+			if ( !quiet ) Output::Warning( "\t\tCouldn't extract!\n" );
+			else Output::Warning( "\t\tCouldn't extract '%s'!\n", entry->strName.c_str() );
 		}
 	}
 	Output::Msg( "Done!\n" );

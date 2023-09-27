@@ -8,6 +8,8 @@ class CAddonJson
 
 		CAddonJson( Bootil::BString strInfoFile )
 		{
+			m_IgnoredFiles = 0;
+
 			Bootil::BString strFileContents;
 
 			//
@@ -109,10 +111,11 @@ class CAddonJson
 			}
 		}
 
-		void RemoveIgnoredFiles( Bootil::String::List& files )
+		void RemoveIgnoredFiles( Bootil::String::List& files, bool quiet )
 		{
 			Bootil::String::List old_files = files;
 			files.clear();
+
 			BOOTIL_FOREACH( f, old_files, Bootil::String::List )
 			{
 				bool bSkipFile = false;
@@ -128,6 +131,9 @@ class CAddonJson
 				Bootil::BString strLow = Bootil::String::GetLower( *f );
 				if ( Bootil::String::Test::Wildcard( "*thumbs.db", strLow ) ) continue;
 				if ( Bootil::String::Test::Wildcard( "*desktop.ini", strLow ) ) continue;
+
+				// Git stuff
+				if ( Bootil::String::Test::Wildcard( ".git*", strLow ) ) continue;
 
 				//
 				// Don't include OS X metadata files
@@ -148,7 +154,14 @@ class CAddonJson
 				}
 
 				if ( !bSkipFile )
+				{
 					files.push_back( *f );
+				}
+				else
+				{
+					m_IgnoredFiles++;
+					if ( !quiet ) Bootil::Output::Msg( "\tIgnored %s\n", f->c_str() );
+				}
 			}
 		}
 
@@ -165,6 +178,7 @@ class CAddonJson
 			{
 				tags.AddChild().Value( *tag );
 			}
+
 			Bootil::BString strOutput;
 			Bootil::Data::Json::Export( tree, strOutput, true );
 			//Bootil::Output::Msg( "\n\n%s\n\n", strOutput.c_str() );
@@ -184,6 +198,7 @@ class CAddonJson
 		Bootil::BString			m_AddonType;
 		Bootil::String::List	m_Ignores;
 		Bootil::String::List	m_Tags;
+		int						m_IgnoredFiles;
 };
 
 

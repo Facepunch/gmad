@@ -79,6 +79,7 @@ int main( int argc, char* argv[] )
 	Output::Msg("\tgmad.exe extract -file path/to/gma.gma\n\n");
 
 	Output::Msg("\tAdd -warninvalid to automatically skip invalid files\n\n");
+	Output::Msg("\tAdd -quiet to not spam file paths to output\n\n");
 
 #ifdef _WIN32
 	// Make sure they see how to use it

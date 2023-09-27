@@ -133,7 +133,7 @@ namespace Addon
 			}
 
 			//
-			// Read a fileid from the addon into the buffer
+			// Read a file id from the addon into the buffer
 			//
 			bool ReadFile( uint32_t iFileID, Bootil::Buffer& buffer )
 			{
