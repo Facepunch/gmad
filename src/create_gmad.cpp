@@ -48,7 +48,7 @@ namespace CreateAddon
 				if ( !quiet ) Output::Warning( "\t\t[Not allowed by whitelist]\n" );
 				if ( !warnInvalid ) bOk = false;
 
-				errorFiles.insert_or_assign( file->c_str(), "Not allowed by whitelist" );
+				errorFiles.emplace( *file, "Not allowed by whitelist" );
 			}	
 
 			//
