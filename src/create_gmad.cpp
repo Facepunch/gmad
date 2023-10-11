@@ -3,6 +3,7 @@
 #include "AddonWhiteList.h"
 #include "AddonFormat.h"
 #include "Addon_Json.h"
+#include "AddonBuffer.h"
 #include <unordered_map>
 
 using namespace Bootil;
@@ -76,7 +77,7 @@ namespace CreateAddon
 	//
 	// Create an uncompressed GMAD file from a list of files
 	//
-	bool Create( Buffer& buffer, BString strFolder, String::List& files, BString strTitle, BString strDescription )
+	bool Create( Addon::AddonBuffer& buffer, BString strFolder, String::List& files, BString strTitle, BString strDescription )
 	{
 		bool quiet = CommandLine::HasSwitch( "-quiet" );
 
@@ -106,6 +107,7 @@ namespace CreateAddon
 
 		// File list
 		uint32_t iFileNum = 0;
+		uint64_t iTotalSize = 0;
 		BOOTIL_FOREACH( f, files, String::List )
 		{
 			int64_t	iSize = File::Size( strFolder + *f );
@@ -116,6 +118,7 @@ namespace CreateAddon
 			}
 
 			iFileNum++;
+			iTotalSize = iTotalSize + iSize;
 			buffer.WriteType( ( uint32_t ) iFileNum );			// File number (4)
 			buffer.WriteString( String::GetLower( *f ) );		// File name (all lower case!) (n)
 			buffer.WriteType( ( int64_t ) iSize );				// File size (8)
@@ -131,6 +134,11 @@ namespace CreateAddon
 			}
 
 			//Output::Msg( "\tFile index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
+		}
+
+		if ( !buffer.EnsureCapacity(buffer.GetWritten() + iTotalSize) )
+		{
+			Output::Warning( "Failed to allocate buffer. Expect problems!\n" );
 		}
 
 		// Zero to signify end of files
@@ -243,7 +251,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid )
 	//
 	// Create an addon file in a buffer
 	//
-	AutoBuffer buffer;
+	Addon::AddonBuffer buffer;
 	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle(), addoninfo.BuildDescription() ) )
 	{
 		Output::Warning( "Failed to create the addon\n" );
