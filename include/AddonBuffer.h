@@ -9,6 +9,17 @@ namespace Addon
 	class AddonBuffer : public Bootil::AutoBuffer
 	{
 		public:
+
+			AddonBuffer( int iInitialSize = 256 ) // Should be enough for the header and all its stuff
+			{
+				m_pData		= NULL;
+				m_iSize		= 0;
+				m_iWritten	= 0;
+				m_iPos		= 0;
+
+				EnsureCapacity( iInitialSize );
+			}
+
 			bool EnsureCapacity( unsigned int iSize ) // Same as AutoBuffer::EnsureCapacity, but the 500mb limit was removed.
 			{
 				if ( iSize <= m_iSize ) { return true; }

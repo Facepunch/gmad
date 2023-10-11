@@ -105,6 +105,17 @@ namespace CreateAddon
 
 		Output::Msg( "Writing file list...\n" );
 
+		uint64_t iFileListSize = 0;
+		BOOTIL_FOREACH( f, files, String::List )
+		{
+			iFileListSize = iFileListSize + 4 + 180 + 8 + 4; // File number (4) + File name (180 file name length limit) + File size (8) + File CRC (4)
+		}
+
+		if ( !buffer.EnsureCapacity(buffer.GetWritten() + iFileListSize) )
+		{
+			Output::Warning( "Failed to allocate buffer. Expect problems!\n" );
+		}
+
 		// File list
 		uint32_t iFileNum = 0;
 		uint64_t iTotalSize = 0;
@@ -136,7 +147,7 @@ namespace CreateAddon
 			//Output::Msg( "\tFile index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
 		}
 
-		if ( !buffer.EnsureCapacity(buffer.GetWritten() + iTotalSize) )
+		if ( !buffer.EnsureCapacity(buffer.GetWritten() + iTotalSize + 8) )
 		{
 			Output::Warning( "Failed to allocate buffer. Expect problems!\n" );
 		}
