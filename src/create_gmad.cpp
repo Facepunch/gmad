@@ -3,7 +3,6 @@
 #include "AddonWhiteList.h"
 #include "AddonFormat.h"
 #include "Addon_Json.h"
-#include "AddonBuffer.h"
 #include <unordered_map>
 
 using namespace Bootil;
@@ -77,7 +76,7 @@ namespace CreateAddon
 	//
 	// Create an uncompressed GMAD file from a list of files
 	//
-	bool Create( Addon::AddonBuffer& buffer, BString strFolder, String::List& files, BString strTitle, BString strDescription )
+	bool Create( AutoBuffer& buffer, BString strFolder, String::List& files, BString strTitle, BString strDescription )
 	{
 		bool quiet = CommandLine::HasSwitch( "-quiet" );
 
@@ -262,7 +261,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid )
 	//
 	// Create an addon file in a buffer
 	//
-	Addon::AddonBuffer buffer;
+	AutoBuffer buffer(256);
 	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle(), addoninfo.BuildDescription() ) )
 	{
 		Output::Warning( "Failed to create the addon\n" );
