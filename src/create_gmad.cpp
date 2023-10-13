@@ -110,7 +110,7 @@ namespace CreateAddon
 			iFileListSize = iFileListSize + 4 + 180 + 8 + 4; // File number (4) + File name (180 file name length limit) + File size (8) + File CRC (4)
 		}
 
-		if ( !buffer.EnsureCapacity(buffer.GetWritten() + iFileListSize) )
+		if ( !buffer.EnsureCapacity( buffer.GetWritten() + iFileListSize ) )
 		{
 			Output::Warning( "Failed to allocate buffer. Expect problems!\n" );
 		}
@@ -146,7 +146,7 @@ namespace CreateAddon
 			//Output::Msg( "\tFile index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
 		}
 
-		if ( !buffer.EnsureCapacity(buffer.GetWritten() + iTotalSize + 8) )
+		if ( !buffer.EnsureCapacity( buffer.GetWritten() + iTotalSize + 8 ) )
 		{
 			Output::Warning( "Failed to allocate buffer. Expect problems!\n" );
 		}
@@ -261,7 +261,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid )
 	//
 	// Create an addon file in a buffer
 	//
-	AutoBuffer buffer(256);
+	AutoBuffer buffer( 256 );
 	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle(), addoninfo.BuildDescription() ) )
 	{
 		Output::Warning( "Failed to create the addon\n" );
