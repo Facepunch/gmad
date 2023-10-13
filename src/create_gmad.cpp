@@ -76,7 +76,7 @@ namespace CreateAddon
 	//
 	// Create an uncompressed GMAD file from a list of files
 	//
-	bool Create( Buffer& buffer, BString strFolder, String::List& files, BString strTitle, BString strDescription )
+	bool Create( AutoBuffer& buffer, BString strFolder, String::List& files, BString strTitle, BString strDescription )
 	{
 		bool quiet = CommandLine::HasSwitch( "-quiet" );
 
@@ -104,8 +104,20 @@ namespace CreateAddon
 
 		Output::Msg( "Writing file list...\n" );
 
+		uint64_t iFileListSize = 0;
+		BOOTIL_FOREACH( f, files, String::List )
+		{
+			iFileListSize = iFileListSize + 4 + 180 + 8 + 4; // File number (4) + File name (180 file name length limit) + File size (8) + File CRC (4)
+		}
+
+		if ( !buffer.EnsureCapacity( buffer.GetWritten() + iFileListSize ) )
+		{
+			Output::Warning( "Failed to allocate buffer. Expect problems!\n" );
+		}
+
 		// File list
 		uint32_t iFileNum = 0;
+		uint64_t iTotalSize = 0;
 		BOOTIL_FOREACH( f, files, String::List )
 		{
 			int64_t	iSize = File::Size( strFolder + *f );
@@ -116,6 +128,7 @@ namespace CreateAddon
 			}
 
 			iFileNum++;
+			iTotalSize = iTotalSize + iSize;
 			buffer.WriteType( ( uint32_t ) iFileNum );			// File number (4)
 			buffer.WriteString( String::GetLower( *f ) );		// File name (all lower case!) (n)
 			buffer.WriteType( ( int64_t ) iSize );				// File size (8)
@@ -131,6 +144,11 @@ namespace CreateAddon
 			}
 
 			//Output::Msg( "\tFile index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
+		}
+
+		if ( !buffer.EnsureCapacity( buffer.GetWritten() + iTotalSize + 8 ) )
+		{
+			Output::Warning( "Failed to allocate buffer. Expect problems!\n" );
 		}
 
 		// Zero to signify end of files
@@ -243,7 +261,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid )
 	//
 	// Create an addon file in a buffer
 	//
-	AutoBuffer buffer;
+	AutoBuffer buffer( 256 );
 	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle(), addoninfo.BuildDescription() ) )
 	{
 		Output::Warning( "Failed to create the addon\n" );
