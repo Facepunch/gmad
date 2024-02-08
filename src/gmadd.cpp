@@ -80,6 +80,8 @@ int main( int argc, char* argv[] )
 
 	Output::Msg("\tAdd -warninvalid to automatically skip invalid files\n\n");
 	Output::Msg("\tAdd -quiet to not spam file paths to output\n\n");
+	Output::Msg("\tAdd -nocrc to not write crcs to the output\n\n");
+	Output::Msg("\tAdd -lowmemory to write directly to the output file\n\n");
 
 #ifdef _WIN32
 	// Make sure they see how to use it
