@@ -24,10 +24,13 @@ int main( int argc, char* argv[] )
 	{
 
 		BString strFolder = CommandLine::GetSwitch( "-folder", "" );
-
+		bool pauseOnError = false;
 		if ( strFolder == "" && strCommand != "create" )
 		{
 			strFolder = strCommand;
+#ifdef _WIN32
+			pauseOnError = true;
+#endif
 		}
 
 		if ( strFolder == "" )
@@ -38,9 +41,9 @@ int main( int argc, char* argv[] )
 
 		BString strTarget = CommandLine::GetSwitch( "-out", "" );
 
-		bool WarnOnInvalidFiles = CommandLine::GetFull().find("-warninvalid") != -1;
+		bool WarnOnInvalidFiles = CommandLine::GetFull().find( "-warninvalid" ) != -1;
 
-		return CreateAddonFile( strFolder, strTarget, WarnOnInvalidFiles );
+		return CreateAddonFile( strFolder, strTarget, WarnOnInvalidFiles, pauseOnError );
 	}
 
 	//
@@ -49,10 +52,13 @@ int main( int argc, char* argv[] )
 	if ( strCommand == "extract" || String::File::GetFileExtension( strCommand ) == "gma" )
 	{
 		BString strFile = CommandLine::GetSwitch( "-file", "" );
-
+		bool pauseOnError = false;
 		if ( strFile == "" && strCommand != "extract" )
 		{
 			strFile = strCommand;
+#ifdef _WIN32
+			pauseOnError = true;
+#endif
 		}
 
 		if ( strFile == "" )
@@ -62,7 +68,7 @@ int main( int argc, char* argv[] )
 		}
 
 		BString strTarget = CommandLine::GetSwitch( "-out", "" );
-		return ExtractAddonFile( strFile, strTarget );
+		return ExtractAddonFile( strFile, strTarget, pauseOnError );
 	}
 
 	//
@@ -81,11 +87,8 @@ int main( int argc, char* argv[] )
 	Output::Msg("\tAdd -warninvalid to automatically skip invalid files\n\n");
 	Output::Msg("\tAdd -quiet to not spam file paths to output\n\n");
 
-#ifdef _WIN32
 	// Make sure they see how to use it
-	// Linux folks are too smart for this
-	system( "pause" );
-#endif
+	Pause();
 
 	return 0;
 }

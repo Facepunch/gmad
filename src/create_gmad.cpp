@@ -197,9 +197,8 @@ namespace CreateAddon
 	}
 }
 
-int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid )
+int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid, bool pauseOnError )
 {
-	bool bErrors = false;
 	bool quiet = CommandLine::HasSwitch( "-quiet" );
 
 	//
@@ -228,6 +227,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid )
 	if ( !addoninfo.GetError().empty() )
 	{
 		Output::Warning( "%s error: %s\n", ( strFolder + "addon.json" ).c_str(), addoninfo.GetError().c_str() );
+		if ( pauseOnError ) Pause();
 		return 1;
 	}
 
@@ -255,6 +255,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid )
 	if ( !CreateAddon::VerifyFiles( files, warnInvalid ) )
 	{
 		Output::Warning( "File list verification failed\n" );
+		if ( pauseOnError ) Pause();
 		return 1;
 	}
 
@@ -265,6 +266,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid )
 	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle(), addoninfo.BuildDescription() ) )
 	{
 		Output::Warning( "Failed to create the addon\n" );
+		if ( pauseOnError ) Pause();
 		return 1;
 	}
 	
@@ -276,6 +278,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid )
 	if ( !File::Write( strOutfile, buffer ) )
 	{
 		Output::Warning( "Couldn't save to file \"%s\"\n", strOutfile.c_str() );
+		if ( pauseOnError ) Pause();
 		return 1;
 	}
 

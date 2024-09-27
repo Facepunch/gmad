@@ -6,7 +6,7 @@
 
 using namespace Bootil;
 
-int ExtractAddonFile( BString strFile, BString strOutPath )
+int ExtractAddonFile( BString strFile, BString strOutPath, bool pauseOnError )
 {
 	bool quiet = CommandLine::HasSwitch( "-quiet" );
 
@@ -31,12 +31,14 @@ int ExtractAddonFile( BString strFile, BString strOutPath )
 	if ( !addon.ReadFromFile( strFile ) )
 	{
 		Output::Warning( "There was a problem opening the file\n" );
+		if ( pauseOnError ) Pause();
 		return 1;
 	}
 
 	if ( !addon.Parse() )
 	{
 		Output::Warning( "There was a problem parsing the file\n" );
+		if ( pauseOnError ) Pause();
 		return 1;
 	}
 
@@ -74,5 +76,8 @@ int ExtractAddonFile( BString strFile, BString strOutPath )
 		}
 	}
 	Output::Msg( "Done!\n" );
+
+	if ( pauseOnError && badFileCount > 0 ) Pause();
+
 	return 0;
 }
