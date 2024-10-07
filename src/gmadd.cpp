@@ -1,6 +1,10 @@
 
 #include "gmadd.h"
 
+#ifdef _WIN32
+#include "Windows.h"
+#endif
+
 using namespace Bootil;
 
 int main( int argc, char* argv[] )
@@ -10,6 +14,17 @@ int main( int argc, char* argv[] )
 	Console::FGColorPush( Console::Green );
 	Output::Msg( "Garry's Mod Addon Creator 1.1\n" );
 	Console::FGColorPop();
+	
+	//
+	// Detect if this is a standalone cmd window, or was run as a script in an existing window
+	// If we are standalone, pause on error, so it doesn't look like nothing happened.
+	//
+	bool pauseOnError = false;
+#ifdef _WIN32
+	DWORD iConsoleProcess;
+	GetWindowThreadProcessId( GetConsoleWindow(), &iConsoleProcess );
+	if ( GetCurrentProcessId() == iConsoleProcess ) pauseOnError = true;
+#endif
 
 	//
 	// Get the command from the command line - (it should be argument 0)
@@ -24,13 +39,9 @@ int main( int argc, char* argv[] )
 	{
 
 		BString strFolder = CommandLine::GetSwitch( "-folder", "" );
-		bool pauseOnError = false;
 		if ( strFolder == "" && strCommand != "create" )
 		{
 			strFolder = strCommand;
-#ifdef _WIN32
-			pauseOnError = true;
-#endif
 		}
 
 		if ( strFolder == "" )
@@ -56,9 +67,6 @@ int main( int argc, char* argv[] )
 		if ( strFile == "" && strCommand != "extract" )
 		{
 			strFile = strCommand;
-#ifdef _WIN32
-			pauseOnError = true;
-#endif
 		}
 
 		if ( strFile == "" )
@@ -88,7 +96,7 @@ int main( int argc, char* argv[] )
 	Output::Msg("\tAdd -quiet to not spam file paths to output\n\n");
 
 	// Make sure they see how to use it
-	Pause();
+	if ( pauseOnError ) Pause();
 
 	return 0;
 }
