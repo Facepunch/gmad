@@ -3,6 +3,7 @@
 #include "AddonWhiteList.h"
 #include "AddonFormat.h"
 #include "Addon_Json.h"
+#include "AddonWriter.h"
 #include <unordered_map>
 
 using namespace Bootil;
@@ -76,7 +77,7 @@ namespace CreateAddon
 	//
 	// Create an uncompressed GMAD file from a list of files
 	//
-	bool Create( AutoBuffer& buffer, BString strFolder, String::List& files, BString strTitle, BString strDescription )
+	bool Create( Addon::Writer& writer, BString strFolder, String::List& files, BString strTitle, BString strDescription )
 	{
 		bool quiet = CommandLine::HasSwitch( "-quiet" );
 
@@ -84,23 +85,33 @@ namespace CreateAddon
 		bool doCRCs = true;
 		if ( CommandLine::HasSwitch( "-nocrc" ) ) doCRCs = false;
 
+		// Appends the file content directly to the .gma instead of writing everything in memory.
+		bool lowMemory = false;
+		if ( CommandLine::HasSwitch( "-lowmemory" ) ) lowMemory = true;
+
+		if ( doCRCs && lowMemory )
+		{
+			Output::Warning( "CRCs have been disabled due to -lowmemory being enabled!\n" );
+			doCRCs = false;
+		}
+
 		// Header (5)
-		buffer.Write( Addon::Ident, 4 );				// Ident (4)
-		buffer.WriteType( ( char ) Addon::Version );	// Version (1)
+		writer.Write( Addon::Ident, 4 );				// Ident (4)
+		writer.WriteType( ( char ) Addon::Version );	// Version (1)
 		// SteamID (8) [unused]
-		buffer.WriteType( ( uint64_t ) 0ULL );
+		writer.WriteType( ( uint64_t ) 0ULL );
 		// TimeStamp (8)
-		buffer.WriteType( ( uint64_t ) Time::UnixTimestamp() );
+		writer.WriteType( ( uint64_t ) Time::UnixTimestamp() );
 		// Required content (a list of strings)
-		buffer.WriteType( ( char ) 0 ); // signifies nothing
+		writer.WriteType( ( char ) 0 ); // signifies nothing
 		// Addon Name (n)
-		buffer.WriteString( strTitle );
+		writer.WriteString( strTitle );
 		// Addon Description (n)
-		buffer.WriteString( strDescription );
+		writer.WriteString( strDescription );
 		// Addon Author (n) [unused]
-		buffer.WriteString( "Author Name" );
+		writer.WriteString( "Author Name" );
 		// Addon Version (4) [unused]
-		buffer.WriteType( ( int32_t ) 1 );
+		writer.WriteType( ( int32_t ) 1 );
 
 		Output::Msg( "Writing file list...\n" );
 
@@ -110,7 +121,7 @@ namespace CreateAddon
 			iFileListSize = iFileListSize + 4 + 180 + 8 + 4; // File number (4) + File name (180 file name length limit) + File size (8) + File CRC (4)
 		}
 
-		if ( !buffer.EnsureCapacity( buffer.GetWritten() + iFileListSize ) )
+		if ( !writer.EnsureCapacity( writer.GetWritten() + iFileListSize ) )
 		{
 			Output::Warning( "Failed to allocate buffer. Expect problems!\n" );
 		}
@@ -118,6 +129,7 @@ namespace CreateAddon
 		// File list
 		uint32_t iFileNum = 0;
 		uint64_t iTotalSize = 0;
+		uint64_t iBiggestFile = 0;
 		BOOTIL_FOREACH( f, files, String::List )
 		{
 			int64_t	iSize = File::Size( strFolder + *f );
@@ -129,40 +141,47 @@ namespace CreateAddon
 
 			iFileNum++;
 			iTotalSize = iTotalSize + iSize;
-			buffer.WriteType( ( uint32_t ) iFileNum );			// File number (4)
-			buffer.WriteString( String::GetLower( *f ) );		// File name (all lower case!) (n)
-			buffer.WriteType( ( int64_t ) iSize );				// File size (8)
+			writer.WriteType( ( uint32_t ) iFileNum );			// File number (4)
+			writer.WriteString( String::GetLower( *f ) );		// File name (all lower case!) (n)
+			writer.WriteType( ( int64_t ) iSize );				// File size (8)
+
+			if ( iSize > iBiggestFile )
+				iBiggestFile = iSize;
 
 			if ( doCRCs )
 			{
 				uint32_t iCRC = File::CRC( strFolder + *f );
-				buffer.WriteType( ( uint32_t ) iCRC );			// File CRC (4)
+				writer.WriteType( ( uint32_t ) iCRC );			// File CRC (4)
 			}
 			else
 			{
-				buffer.WriteType( ( uint32_t ) 0 );
+				writer.WriteType( ( uint32_t ) 0 );
 			}
 
 			//Output::Msg( "\tFile index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
 		}
 
-		if ( !buffer.EnsureCapacity( buffer.GetWritten() + iTotalSize + 8 ) )
+		if ( !writer.EnsureCapacity( writer.GetWritten() + iTotalSize + 8 ) )
 		{
 			Output::Warning( "Failed to allocate buffer. Expect problems!\n" );
 		}
 
 		// Zero to signify end of files
 		iFileNum = 0;
-		buffer.WriteType( ( uint32_t ) iFileNum );
+		writer.WriteType( ( uint32_t ) iFileNum );
 
 		Output::Msg( "Writing files...\n" );
+
+		AutoBuffer filebuffer;
+		filebuffer.EnsureCapacity(iBiggestFile + 32);
 
 		// The files
 		BOOTIL_FOREACH( f, files, String::List )
 		{
 			if ( !quiet ) Output::Msg( "\tWriting %s...\n", f->c_str() );
 
-			AutoBuffer filebuffer;
+			filebuffer.SetPos(0);
+			filebuffer.SetWritten(0);
 			bool res = File::Read( strFolder + *f, filebuffer );
 			//Output::Msg( "\tReading %s bool = %i %u\n", f->c_str(), res, filebuffer.GetWritten() );
 
@@ -172,9 +191,10 @@ namespace CreateAddon
 				return false;
 			}
 
-			uint64_t before = buffer.GetWritten();
-			buffer.WriteBuffer( filebuffer );
-			uint64_t diff = buffer.GetWritten() - before;
+			uint64_t before = writer.GetWritten();
+			writer.WriteBuffer( filebuffer );
+			uint64_t diff = writer.GetWritten() - before;
+
 			if ( diff < 1 )
 			{
 				Output::Warning( "Failed to write file '%s' - written %llu bytes! (Can't grow buffer?)\n", ( *f ).c_str(), diff );
@@ -185,12 +205,11 @@ namespace CreateAddon
 		// CRC what we've written (to verify that the download isn't shitted) (4)
 		if ( doCRCs )
 		{
-			uint32_t AddonCRC = Hasher::CRC32::Easy( buffer.GetBase(), buffer.GetWritten() );
-			buffer.WriteType<uint32_t>( AddonCRC );
+			writer.WriteType<uint32_t>( writer.CRC() );
 		}
 		else
 		{
-			buffer.WriteType<uint32_t>( 0 );
+			writer.WriteType<uint32_t>( 0 );
 		}
 
 		return true;
@@ -262,8 +281,8 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid, bo
 	//
 	// Create an addon file in a buffer
 	//
-	AutoBuffer buffer( 256 );
-	if ( !CreateAddon::Create( buffer, strFolder, files, addoninfo.GetTitle(), addoninfo.BuildDescription() ) )
+	Addon::Writer writer( strOutfile, CommandLine::HasSwitch( "-lowmemory" ) );
+	if ( !CreateAddon::Create( writer, strFolder, files, addoninfo.GetTitle(), addoninfo.BuildDescription() ) )
 	{
 		Output::Warning( "Failed to create the addon\n" );
 		if ( pauseOnError ) Pause();
@@ -275,7 +294,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid, bo
 	//
 	// Save the buffer to the provided name
 	//
-	if ( !File::Write( strOutfile, buffer ) )
+	if ( !writer.WriteFile() )
 	{
 		Output::Warning( "Couldn't save to file \"%s\"\n", strOutfile.c_str() );
 		if ( pauseOnError ) Pause();
@@ -285,7 +304,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid, bo
 	//
 	// Success!
 	//
-	Output::Msg( "Successfully saved to \"%s\" [%s]\n", strOutfile.c_str(), String::Format::Memory( buffer.GetWritten() ).c_str() );
+	Output::Msg( "Successfully saved to \"%s\" [%s]\n", strOutfile.c_str(), writer.FormatSize().c_str() );
 	Output::Msg( "Files ignored: %i\n", addoninfo.m_IgnoredFiles );
 	return 0;
 }
