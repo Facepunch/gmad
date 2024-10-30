@@ -106,6 +106,13 @@ namespace Addon
 			"data_static/*.wav",
 			"data_static/*.ogg",
 
+
+			"data_static/*.mdl",
+			"data_static/*.phy",
+			"data_static/*.ani",
+			"data_static/*.vvd",
+			"data_static/*.vtx",
+
 			NULL
 		};
 
