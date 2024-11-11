@@ -35,7 +35,7 @@ int main( int argc, char* argv[] )
 	//
 	// Create
 	//
-	if ( strCommand == "create" || File::IsFolder( strCommand ) )
+	if ( strCommand == "create" || File::IsFolder( strCommand ) && strCommand != "extractFolder")
 	{
 
 		BString strFolder = CommandLine::GetSwitch( "-folder", "" );
@@ -78,7 +78,40 @@ int main( int argc, char* argv[] )
 		BString strTarget = CommandLine::GetSwitch( "-out", "" );
 		return ExtractAddonFile( strFile, strTarget, pauseOnError );
 	}
-
+	
+	//
+	// Extract Folders
+	//
+	if ( strCommand == "extractfolder" )
+	{
+		BString strFolder = CommandLine::GetSwitch( "-folder", "" );
+		
+		if ( strFolder == "" )
+		{
+			Output::Msg( "Missing -folder (the folder you want to extract)\n" );
+			exit( 1 );
+		}
+		
+		BString strTarget = CommandLine::GetSwitch( "-out", "" );
+		
+		//
+		// Get files to extract in folder
+		//
+		String::List files;
+		File::GetFilesInFolder( strFolder, files, false );
+		
+		BOOTIL_FOREACH( f, files, String::List )
+		{
+			BString filenameWithExtension = f->c_str();
+			BString filename = filenameWithExtension;
+			String::File::StripExtension(filename);
+			if (String::File::IsFileExtension(filenameWithExtension, "gma"))
+			{
+				ExtractAddonFile(strFolder + "/" + filenameWithExtension, strTarget + "/" + filename);
+			}
+		}
+		return 0;
+	}
 	//
 	// Help
 	//
@@ -90,7 +123,8 @@ int main( int argc, char* argv[] )
 	Output::Msg("\tgmad.exe create -folder path/to/folder -out path/to/gma.gma\n");
 	Output::Msg("\tgmad.exe create -folder path/to/folder\n");
 	Output::Msg("\tgmad.exe extract -file path/to/gma.gma -out path/to/folder\n");
-	Output::Msg("\tgmad.exe extract -file path/to/gma.gma\n\n");
+	Output::Msg("\tgmad.exe extract -file path/to/gma.gma\n");
+	Output::Msg("\tgmad.exe extractFolder -folder path/to/gma/files/ -out path/to/folder\n\n");
 
 	Output::Msg("\tAdd -warninvalid to automatically skip invalid files\n\n");
 	Output::Msg("\tAdd -quiet to not spam file paths to output\n\n");
