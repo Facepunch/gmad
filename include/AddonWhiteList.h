@@ -88,23 +88,12 @@ namespace Addon
 
 			// static version of the data/ folder
 			// (because you wouldn't be able to modify these)
+			// We only allow filetypes here that are not already allowed above
 			"data_static/*.txt",
 			"data_static/*.dat",
 			"data_static/*.json",
 			"data_static/*.xml",
 			"data_static/*.csv",
-			"data_static/*.dem",
-			"data_static/*.vcd",
-
-			"data_static/*.vtf",
-			"data_static/*.vmt",
-			"data_static/*.png",
-			"data_static/*.jpg",
-			"data_static/*.jpeg",
-
-			"data_static/*.mp3",
-			"data_static/*.wav",
-			"data_static/*.ogg",
 
 			NULL
 		};
