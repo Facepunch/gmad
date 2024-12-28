@@ -2,6 +2,8 @@
 #ifndef ADDON_JSON_H
 #define ADDON_JSON_H
 
+#include "Addon_Util.h"
+
 class CAddonJson
 {
 	public:
@@ -113,54 +115,67 @@ class CAddonJson
 
 		void RemoveIgnoredFiles( Bootil::String::List& files, bool quiet )
 		{
-			Bootil::String::List old_files = files;
-			files.clear();
+			// We don't use them directly since the compiler then would create a std::string for every iteration...
+			static const Bootil::BString addon_json = "addon.json";
+			static const Bootil::BString thumbs_db = "*thumbs.db";
+			static const Bootil::BString desktop_ini = "*desktop.ini";
+			static const Bootil::BString git = ".git*";
+			static const Bootil::BString ds_storage = "*/.DS_Store";
 
-			BOOTIL_FOREACH( f, old_files, Bootil::String::List )
+			static Bootil::BString strLow;
+			strLow.reserve( 255 );
+
+			BOOTIL_FOREACH_MANUAL( f, files, Bootil::String::List )
 			{
+				Bootil::Output::Msg("%s\n", (*f).c_str());
 				bool bSkipFile = false;
 
 				//
 				// Never include our json file!
 				//
-				if ( *f == "addon.json" ) continue;
+				if ( *f == addon_json ) bSkipFile = true;
 
 				//
 				// Don't include Windows specifiic files
 				//
-				Bootil::BString strLow = Bootil::String::GetLower( *f );
-				if ( Bootil::String::Test::Wildcard( "*thumbs.db", strLow ) ) continue;
-				if ( Bootil::String::Test::Wildcard( "*desktop.ini", strLow ) ) continue;
+				strLow.assign( *f );
+				Addon::GetLower( strLow );
+
+				if ( Addon::CheckWildcard( thumbs_db, strLow ) ) bSkipFile = true;
+				if ( Addon::CheckWildcard( ds_storage, strLow ) ) bSkipFile = true;
 
 				// Git stuff
-				if ( Bootil::String::Test::Wildcard( ".git*", strLow ) ) continue;
+				if ( Addon::CheckWildcard( git, strLow ) ) bSkipFile = true;
 
 				//
 				// Don't include OS X metadata files
 				//
-				if ( *f == ".DS_Store" ) continue;
-				if ( Bootil::String::Test::Wildcard( "*/.DS_Store", *f ) ) continue;
+				if ( *f == ".DS_Store" ) bSkipFile = true;
+				if ( Addon::CheckWildcard( ds_storage, *f ) ) bSkipFile = true;
 
 				//
 				// Check against our loaded ignores list
 				//
-				BOOTIL_FOREACH( ignore, m_Ignores, Bootil::String::List )
+				if ( !bSkipFile )
 				{
-					if ( Bootil::String::Test::Wildcard( *ignore, *f ) )
+					BOOTIL_FOREACH( ignore, m_Ignores, Bootil::String::List )
 					{
-						bSkipFile = true;
-						break;
+
+						if ( Addon::CheckWildcard( *ignore, *f ) )
+						{
+							bSkipFile = true;
+							break;
+						}
 					}
 				}
 
-				if ( !bSkipFile )
-				{
-					files.push_back( *f );
-				}
-				else
+				if ( bSkipFile )
 				{
 					m_IgnoredFiles++;
 					if ( !quiet ) Bootil::Output::Msg( "\tIgnored %s\n", f->c_str() );
+					f = files.erase( f );
+				} else {
+					++f; // Manually incrementing it since if we were to increment after a file was ignored/erased we would skip the next element
 				}
 			}
 		}

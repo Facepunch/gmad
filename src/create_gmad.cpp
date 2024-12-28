@@ -25,37 +25,39 @@ namespace CreateAddon
 			Output::Warning( "No files found, can't continue!\n" );
 			bOk = false;
 		}
-
-		String::List old_files = files;
-		files.clear();
+		
+		BString lowerFileName;
+		lowerFileName.reserve( 255 );
 
 		//
 		// Print each found file, check they're ok
 		//
-		BOOTIL_FOREACH( file, old_files, String::List )
+		BOOTIL_FOREACH_MANUAL( file, files, String::List )
 		{
 			if ( !quiet ) Output::Msg( "\t%s\n", file->c_str() );
+
+			lowerFileName.assign( *file );
+			Addon::GetLower( lowerFileName );
 
 			//
 			// Check the file against the whitelist
 			// Lowercase the name (addon filesystem is case insensitive)
 			//
-			if ( Addon::WhiteList::Check( String::GetLower( *file ) ) )
-			{
-				files.push_back( *file );
-			}
-			else
+			if ( !Addon::WhiteList::Check( lowerFileName ) )
 			{
 				if ( !quiet ) Output::Warning( "\t\t[Not allowed by whitelist]\n" );
 				if ( !warnInvalid ) bOk = false;
 
 				errorFiles.emplace( *file, "Not allowed by whitelist" );
-			}	
+				file = files.erase( file );
+			} else {
+				++file;
+			}
 
 			//
 			// Warn that we're gonna lowercase the filename
 			//
-			if ( String::GetLower( *file ) != *file )
+			if ( lowerFileName != *file )
 			{
 				if ( !quiet ) Output::Warning( "\t\t[Filename contains captial letters]\n" );
 			}
@@ -130,6 +132,7 @@ namespace CreateAddon
 		uint32_t iFileNum = 0;
 		uint64_t iTotalSize = 0;
 		uint64_t iBiggestFile = 0;
+		std::unordered_map<BString, unsigned int> pCRCPos;
 		BOOTIL_FOREACH( f, files, String::List )
 		{
 			int64_t	iSize = File::Size( strFolder + *f );
@@ -148,15 +151,8 @@ namespace CreateAddon
 			if ( iSize > iBiggestFile )
 				iBiggestFile = iSize;
 
-			if ( doCRCs )
-			{
-				uint32_t iCRC = File::CRC( strFolder + *f );
-				writer.WriteType( ( uint32_t ) iCRC );			// File CRC (4)
-			}
-			else
-			{
-				writer.WriteType( ( uint32_t ) 0 );
-			}
+			pCRCPos[ *f ] = writer.GetPos(); // We save this position to write the CRC later
+			writer.WriteType( ( uint32_t ) 0 );					// File CRC (4)
 
 			//Output::Msg( "\tFile index: %s [CRC:%u] [Size:%s]\n", f->c_str(), iCRC, String::Format::Memory( iSize ).c_str() );
 		}
@@ -200,16 +196,24 @@ namespace CreateAddon
 				Output::Warning( "Failed to write file '%s' - written %llu bytes! (Can't grow buffer?)\n", ( *f ).c_str(), diff );
 				return false;
 			}
+
+			if ( doCRCs ) // Writing it here allows us to directly create the CRC without having to open & read the file again.
+			{
+				unsigned int currentPos = writer.GetPos();
+				writer.SetPos( pCRCPos[ *f ] );
+				writer.WriteType( ( uint32_t ) Bootil::Hasher::CRC32::Easy( filebuffer.GetBase(), filebuffer.GetWritten() ) );
+				writer.SetPos( currentPos );
+			}
 		}
 
 		// CRC what we've written (to verify that the download isn't shitted) (4)
 		if ( doCRCs )
 		{
-			writer.WriteType<uint32_t>( writer.CRC() );
+			writer.WriteType( (uint32_t) writer.CRC() );
 		}
 		else
 		{
-			writer.WriteType<uint32_t>( 0 );
+			writer.WriteType( (uint32_t) 0 );
 		}
 
 		return true;
@@ -220,6 +224,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid )
 {
 	bool bErrors = false;
 	bool quiet = CommandLine::HasSwitch( "-quiet" );
+	Time::Timer startTime = Time::Timer();
 
 	//
 	// Make sure there's a slash on the end
@@ -301,7 +306,7 @@ int CreateAddonFile( BString strFolder, BString strOutfile, bool warnInvalid )
 	//
 	// Success!
 	//
-	Output::Msg( "Successfully saved to \"%s\" [%s]\n", strOutfile.c_str(), writer.FormatSize().c_str() );
+	Output::Msg( "Successfully saved to \"%s\" [%s] in %f seconds \n", strOutfile.c_str(), writer.FormatSize().c_str(), startTime.Seconds() );
 	Output::Msg( "Files ignored: %i\n", addoninfo.m_IgnoredFiles );
 	return 0;
 }

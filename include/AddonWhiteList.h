@@ -3,16 +3,16 @@
 #define ADDONWHITELIST_H
 
 #include "Bootil/Bootil.h"
+#include "Addon_Util.h"
 
-//
-//
-//
-//
 namespace Addon
 {
 	namespace WhiteList
 	{
-		static const char* Wildcard[] =
+		// Entries that start with ! invalidate all previous matches
+		// Caveat: Order of these now matters
+		// Ideally Bootil would support something like /**/ for "only one folder" or "no slashes" (or backwards to mimic gitignore)
+		static const Bootil::BString Allowed[] =
 		{
 			"lua/*.lua",
 			"scenes/*.vcd",
@@ -35,12 +35,15 @@ namespace Addon
 			"materials/*.jpeg",
 			"materials/colorcorrection/*.raw",
 			"models/*.mdl",
-			"models/*.vtx",
 			"models/*.phy",
 			"models/*.ani",
 			"models/*.vvd",
+
+			"models/*.vtx",
+
 			"gamemodes/*/*.txt",
 			"gamemodes/*/*.fgd",
+
 			"gamemodes/*/logo.png",
 			"gamemodes/*/icon24.png",
 			"gamemodes/*/gamemode/*.lua",
@@ -51,10 +54,12 @@ namespace Addon
 			"gamemodes/*/backgrounds/*.jpg",
 			"gamemodes/*/backgrounds/*.jpeg",
 			"gamemodes/*/content/models/*.mdl",
-			"gamemodes/*/content/models/*.vtx",
 			"gamemodes/*/content/models/*.phy",
 			"gamemodes/*/content/models/*.ani",
 			"gamemodes/*/content/models/*.vvd",
+
+			"gamemodes/*/content/models/*.vtx",
+
 			"gamemodes/*/content/materials/*.vmt",
 			"gamemodes/*/content/materials/*.vtf",
 			"gamemodes/*/content/materials/*.png",
@@ -76,40 +81,74 @@ namespace Addon
 
 			// static version of the data/ folder
 			// (because you wouldn't be able to modify these)
+			// We only allow filetypes here that are not already allowed above
 			"data_static/*.txt",
 			"data_static/*.dat",
 			"data_static/*.json",
 			"data_static/*.xml",
 			"data_static/*.csv",
-			"data_static/*.dem",
-			"data_static/*.vcd",
 
-			"data_static/*.vtf",
-			"data_static/*.vmt",
-			"data_static/*.png",
-			"data_static/*.jpg",
-			"data_static/*.jpeg",
+			"",
+		};
 
-			"data_static/*.mp3",
-			"data_static/*.wav",
-			"data_static/*.ogg",
+		static const Bootil::BString Blocked[] =
+		{
+			"!models/*.sw.vtx", // These variations are unused by the game
+			"!models/*.360.vtx",
+			"!models/*.xbox.vtx",
 
-			NULL
+			"!gamemodes/*/*/*.txt", // Only in the root gamemode folder please!
+			"!gamemodes/*/*/*.fgd",
+
+			"!gamemodes/*/content/models/*.sw.vtx",
+			"!gamemodes/*/content/models/*.360.vtx",
+			"!gamemodes/*/content/models/*.xbox.vtx",
+
+			"",
 		};
 
 		//
-		// Call on a filename including relative path to determine
-		// whether file is allowed to be in the addon.
+		// Call on a filename including relative path to determine whether file is allowed to be in the addon.
+		// This whitelist only serves to warn about bad files at upload stage - the game has its own whitelist.
 		//
 		inline bool Check( const Bootil::BString& strname )
 		{
 			bool bValid = false;
 
-			for ( int i = 0;; i++ )
+			for ( int i = 0;; ++i )
 			{
-				if ( bValid || WhiteList::Wildcard[i] == NULL ) break;
+				if ( WhiteList::Allowed[i].empty() ) break;
 
-				bValid = Bootil::String::Test::Wildcard( Wildcard[i], strname );
+				if ( CheckWildcard( Allowed[i], strname ) )
+				{
+					bValid = true;
+					break;
+				}
+			}
+
+			for ( int i = 0;; ++i )
+			{
+				if ( WhiteList::Blocked[i].empty() ) break;
+
+				if ( CheckWildcard( Blocked[i], strname ) )
+				{
+					bValid = false;
+					break;
+				}
+			}
+
+			if ( !bValid )
+			{
+				for ( int i = 0;; ++i )
+				{
+					if ( WhiteList::Allowed[i].empty() ) break;
+
+					if ( CheckWildcard( Allowed[i], strname ) )
+					{
+						bValid = true;
+						break;
+					}
+				}
 			}
 
 			return bValid;
