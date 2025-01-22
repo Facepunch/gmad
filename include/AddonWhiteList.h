@@ -95,6 +95,9 @@ namespace Addon
 			"data_static/*.xml",
 			"data_static/*.csv",
 
+            // Open source license files
+            "license/*.txt",
+
 			NULL
 		};
 
