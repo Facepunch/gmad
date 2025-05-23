@@ -63,7 +63,6 @@ int main( int argc, char* argv[] )
 	if ( strCommand == "extract" || String::File::GetFileExtension( strCommand ) == "gma" )
 	{
 		BString strFile = CommandLine::GetSwitch( "-file", "" );
-		bool pauseOnError = false;
 		if ( strFile == "" && strCommand != "extract" )
 		{
 			strFile = strCommand;
@@ -76,7 +75,7 @@ int main( int argc, char* argv[] )
 		}
 
 		BString strTarget = CommandLine::GetSwitch( "-out", "" );
-		return ExtractAddonFile( strFile, strTarget, pauseOnError );
+		return ExtractAddonFile( strFile, strTarget, false );
 	}
 
 	//

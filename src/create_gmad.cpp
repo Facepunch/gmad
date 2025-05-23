@@ -163,8 +163,7 @@ namespace CreateAddon
 			if ( !quiet ) Output::Msg( "\tWriting %s...\n", f->c_str() );
 
 			AutoBuffer filebuffer;
-			bool res = File::Read( strFolder + *f, filebuffer );
-			//Output::Msg( "\tReading %s bool = %i %u\n", f->c_str(), res, filebuffer.GetWritten() );
+			File::Read( strFolder + *f, filebuffer );
 
 			if ( filebuffer.GetWritten() == 0 )
 			{
