@@ -86,6 +86,8 @@ namespace Addon
 			"gamemodes/*/content/sound/*.mp3",
 			"gamemodes/*/content/sound/*.ogg",
 
+			"gamemodes/*/content/shaders/*.vcs",
+
 			// static version of the data/ folder
 			// (because you wouldn't be able to modify these)
 			// We only allow filetypes here that are not already allowed above
