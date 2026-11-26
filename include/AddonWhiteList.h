@@ -33,6 +33,7 @@ namespace Addon
 			"materials/*.jpg",
 			"materials/*.jpeg",
 			"materials/colorcorrection/*.raw",
+			"materials/*.svg"
 			"models/*.mdl",
 			"models/*.phy",
 			"models/*.ani",
